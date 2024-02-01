@@ -2,6 +2,7 @@ package csx55.overlay.node;
 
 import csx55.overlay.transport.TCPSender;
 import csx55.overlay.transport.TCPReceiverThread;
+import csx55.overlay.transport.TCPSenderThread;
 import csx55.overlay.wireformats.Event;
 import csx55.overlay.wireformats.EventType;
 
@@ -28,6 +29,7 @@ import csx55.overlay.wireformats.TrafficSummaryEvent;
 import csx55.overlay.wireformats.TaskCompleteEvent;
 import csx55.overlay.wireformats.TrafficSummaryResponseEvent;
 import csx55.overlay.util.StatTracker;
+import csx55.overlay.util.Packet;
 
 public class MessagingNode extends Node {
     private String registryName;
@@ -99,11 +101,11 @@ public class MessagingNode extends Node {
             Event registerRequest = new RegisterRequestEvent(ipAddress, serverPort);
 
             String key = generateKey(registryName, registryPort);
-            NodeInfo registryNodeInfo = this.getConnectedNodes().get(key);
 
-            TCPSender sender = registryNodeInfo.getSender();
+            Packet packet = new Packet(key, registerRequest.getBytes());
+            TCPSenderThread senderThread = getSenderThread();
+            senderThread.addToQueue(packet);
 
-            sender.sendData(registerRequest.getBytes());
         } catch (UnknownHostException e) {
             System.err.println("Error getting local host address: " + e.getMessage());
         } catch (Exception e) {
@@ -147,6 +149,7 @@ public class MessagingNode extends Node {
         // added to the registered nodes list
         MessagingNode mn = new MessagingNode(registryName, registryPort);
         mn.initializeServerThread();
+        mn.initializeSenderThread();
         
         System.out.println("Server port= " + mn.getTCPServerThread().getServerPort());
 

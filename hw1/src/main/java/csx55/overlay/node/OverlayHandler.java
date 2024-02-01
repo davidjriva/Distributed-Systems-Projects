@@ -9,6 +9,7 @@ import csx55.overlay.wireformats.MessagingNodesListEvent;
 import csx55.overlay.wireformats.LinkWeightsEvent;
 import csx55.overlay.wireformats.TaskInitiateEvent;
 import csx55.overlay.transport.TCPSender;
+import csx55.overlay.util.Packet;
 import java.io.IOException;
 
 public class OverlayHandler {
@@ -66,11 +67,9 @@ public class OverlayHandler {
 
     public void sendMessagingNodesList(String destinationKey, ArrayList<String> hostNameAndPortList){
         try{
-            NodeInfo destinationNode = registry.getConnectedNodes().get(destinationKey);
-            TCPSender sender = destinationNode.getSender();
-
             MessagingNodesListEvent messagingNodesListEvent = new MessagingNodesListEvent(hostNameAndPortList.size(), hostNameAndPortList);
-            sender.sendData(messagingNodesListEvent.getBytes());
+            Packet packet = new Packet(destinationKey, messagingNodesListEvent.getBytes());
+            registry.getSenderThread().addToQueue(packet);
         } catch(IOException e) {
             System.err.println(e.getMessage());
         }
@@ -220,8 +219,9 @@ public class OverlayHandler {
 
             // Send event to all messaging nodes
             for(NodeInfo nodeInfo : registry.getConnectedNodes().values()){
-                TCPSender sender = nodeInfo.getSender();
-                sender.sendData(linkWeightsEvent.getBytes());
+                String key = nodeInfo.getKey();
+                Packet packet = new Packet(key, linkWeightsEvent.getBytes());
+                registry.getSenderThread().addToQueue(packet);
             }
         }catch(IOException ioe){
             System.err.println(ioe.getMessage());

@@ -10,9 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import csx55.overlay.transport.TCPSender;
-
 import csx55.overlay.wireformats.EventType;
 import csx55.overlay.wireformats.Event;
 import csx55.overlay.wireformats.RegisterRequestEvent;
@@ -21,6 +19,7 @@ import csx55.overlay.wireformats.ConnectWithNeighborEvent;
 import csx55.overlay.wireformats.TaskCompleteEvent;
 import csx55.overlay.wireformats.TrafficSummaryEvent;
 import csx55.overlay.wireformats.TrafficSummaryResponseEvent;
+import csx55.overlay.util.Packet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Registry extends Node {
@@ -165,8 +164,9 @@ public class Registry extends Node {
     public void sendMessageToAllNodes(Event e) {
         try{
             for(NodeInfo nodeInfo : getConnectedNodes().values()){
-                TCPSender sender = nodeInfo.getSender();
-                sender.sendData(e.getBytes());
+                String key = nodeInfo.getKey();
+                Packet packet = new Packet(key, e.getBytes());
+                getSenderThread().addToQueue(packet);
             }
         } catch (IOException ioe) {
             System.err.println("Registry: Error sending message to all nodes: " + ioe.getMessage());
@@ -177,6 +177,7 @@ public class Registry extends Node {
         int portNum = Integer.parseInt(args[0]);
         Registry registry = new Registry(portNum);
         registry.initializeServerThread();
+        registry.initializeSenderThread();
 
         System.out.println("Server port= " + args[0]);
 

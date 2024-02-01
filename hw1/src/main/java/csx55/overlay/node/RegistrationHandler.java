@@ -8,6 +8,7 @@ import csx55.overlay.wireformats.DeregisterRequestEvent;
 import csx55.overlay.wireformats.DeregisterResponseEvent;
 import csx55.overlay.wireformats.RegistrationResult;
 import csx55.overlay.transport.TCPSender;
+import csx55.overlay.util.Packet;
 import java.net.Socket;
 import csx55.overlay.wireformats.EventType;
 import csx55.overlay.node.NodeInfo;
@@ -58,13 +59,24 @@ public class RegistrationHandler {
 
     public void sendRegistrationResponse(byte statusCode, String additionalInfo, NodeInfo nodeInfo) {
         try{
+            String key = nodeInfo.getKey();
             Event registerResponse = new RegisterResponseEvent(statusCode, additionalInfo);
-            nodeInfo.getSender().sendData(registerResponse.getBytes());
+            Packet packet = new Packet(key, registerResponse.getBytes());
+
+            registry.getSenderThread().addToQueue(packet);
         } catch(IOException e) {
             // remove the messagingNode if connection is lost
             String hostName = nodeInfo.getHostName();
             int portNum = nodeInfo.getPortNum();
             String key = registry.generateKey(hostName, portNum);
+
+            while (registry.getSenderThread().getQueueSize() != 0) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ie) {
+                    System.err.println("RegistrationHandler.java: " + ie.getMessage());
+                }
+            }   
 
             registry.getConnectedNodes().remove(key);
             System.err.println(e.getMessage());

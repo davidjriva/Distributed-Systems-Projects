@@ -8,6 +8,8 @@ import csx55.overlay.wireformats.DeregisterRequestEvent;
 import csx55.overlay.wireformats.DeregisterResponseEvent;
 import csx55.overlay.wireformats.RegistrationResult;
 import csx55.overlay.transport.TCPSender;
+import csx55.overlay.transport.TCPSenderThread;
+import csx55.overlay.util.Packet;
 import java.net.Socket;
 import csx55.overlay.wireformats.EventType;
 import csx55.overlay.node.NodeInfo;
@@ -53,12 +55,23 @@ public class DeregistrationHandler {
 
     public void sendDeregistrationResponse(byte statusCode, String additionalInfo, NodeInfo nodeInfo, String hostName, int portNum) {
         try {
+            String key = nodeInfo.getKey();
             Event deregisterResponse = new DeregisterResponseEvent(statusCode, additionalInfo);
+            
             if (nodeInfo != null){
-                nodeInfo.getSender().sendData(deregisterResponse.getBytes());
+                Packet packet = new Packet(key, deregisterResponse.getBytes());
+                TCPSenderThread senderThread = registry.getSenderThread();
+                senderThread.addToQueue(packet);
+                
+                // Avoid modifying the connected nodes list prior to sending the deregistration response
+                while (senderThread.getQueueSize() != 0) {
+                    try{
+                        Thread.sleep(10);
+                    } catch (InterruptedException ie) {
+                        System.err.println("DeregistrationHandler.java: " + ie.getMessage());
+                    }
+                }
 
-                // Remove the node from the overlay
-                String key = registry.generateKey(nodeInfo.getHostName(), portNum);
                 registry.getConnectedNodes().remove(key);
             }else{
                 // Need to communicate with an unregistered node --> create a new TCPSender connection

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import csx55.overlay.wireformats.DeregisterRequestEvent;
 import csx55.overlay.transport.TCPSender;
+import csx55.overlay.util.Packet;
 
 public class MessagingNodeCLI {
     MessagingNode mn;
@@ -59,8 +60,8 @@ public class MessagingNodeCLI {
 
             DeregisterRequestEvent deregisterRequest = new DeregisterRequestEvent(ipAddress, serverPort);
             
-            TCPSender sender = registryNode.getSender();
-            sender.sendData(deregisterRequest.getBytes());
+            Packet packet = new Packet(key, deregisterRequest.getBytes());
+            mn.getSenderThread().addToQueue(packet);
         } catch (UnknownHostException e) {
             System.err.println(e.getMessage());
         } catch (IOException ioe) {

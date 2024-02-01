@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import csx55.overlay.transport.TCPServerThread;
 import csx55.overlay.transport.TCPReceiverThread;
 import csx55.overlay.transport.TCPSender;
+import csx55.overlay.transport.TCPSenderThread;
+import csx55.overlay.util.Packet;
 import csx55.overlay.wireformats.Event;
 import csx55.overlay.wireformats.ConnectWithNeighborEvent;
 import java.net.InetAddress;
@@ -14,11 +16,13 @@ import java.net.UnknownHostException;
 public abstract class Node {
     private ConcurrentHashMap<String, NodeInfo> connectedNodes = new ConcurrentHashMap<>(); //Cache sockets this node has connected to
     private TCPServerThread serverThread;
+    private TCPSenderThread senderThread;
     private int serverPort;
 
     public Node(int serverPort) {
         try {
-            serverThread = new TCPServerThread(serverPort, this, connectedNodes);
+            this.serverThread = new TCPServerThread(serverPort, this, connectedNodes);
+            this.senderThread = new TCPSenderThread(this);
             this.serverPort = serverThread.getServerPort();
         } catch(IOException e) {
             System.err.println(e.getMessage());
@@ -28,6 +32,11 @@ public abstract class Node {
 
     public void initializeServerThread() {
         Thread thread = new Thread(serverThread);
+        thread.start();
+    }
+    
+    public void initializeSenderThread() {
+        Thread thread = new Thread(senderThread);
         thread.start();
     }
 
@@ -81,13 +90,13 @@ public abstract class Node {
             thread.start();
 
             // Send a request to the destination so that the destination can connect and cache this socket
-            InetAddress localHost = InetAddress.getLocalHost();
-            String localIpAddress = localHost.getHostAddress();
+            String localIpAddress = InetAddress.getLocalHost().getHostAddress();
 
-            TCPSender destinationSender = destinationNode.getSender();
-
+            String key = destinationNode.getKey();
             ConnectWithNeighborEvent connectWithNeighborEvent = new ConnectWithNeighborEvent(localIpAddress, serverPort);
-            destinationSender.sendData(connectWithNeighborEvent.getBytes());
+            Packet packet = new Packet(key, connectWithNeighborEvent.getBytes());
+
+            getSenderThread().addToQueue(packet);
         }catch(UnknownHostException e) {
             System.err.println(e.getMessage());
         }catch(IOException ioe) {
@@ -97,8 +106,8 @@ public abstract class Node {
 
     public void sendEventToDestination(String destination, Event e) {
         try{
-            TCPSender destinationSender = connectedNodes.get(destination).getSender();
-            destinationSender.sendData(e.getBytes());
+            Packet packet = new Packet(destination, e.getBytes());
+            getSenderThread().addToQueue(packet);
         } catch (IOException ioe) {
             System.err.println("MessagingNodeEventHandler: Error transmitting bytes: " + ioe.getMessage());
         }
@@ -114,6 +123,10 @@ public abstract class Node {
 
     public TCPServerThread getTCPServerThread(){
         return serverThread;
+    }
+    
+    public TCPSenderThread getSenderThread() {
+        return senderThread;
     }
 
     public void setTCPServerThread(TCPServerThread serverThread){
