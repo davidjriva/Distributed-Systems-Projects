@@ -48,7 +48,22 @@ public class TCPSenderThread implements Runnable{
                 byte[] message = p.getMessage();
                 
                 TCPSender sender = node.getConnectedNodes().get(key).getSender();
-                sender.sendData(message);
+
+                if (sender == null){
+                    // No socket exists for communications. Open a new socket just for this message.
+                    String[] parts = key.split(":");
+                    String hostName = parts[0];
+                    int portNum = Integer.parseInt(parts[1]);
+
+                    Socket tmpSocket = new Socket(hostName, portNum);
+                    sender = new TCPSender(tmpSocket);
+                    
+                    sender.sendData(message);
+                    tmpSocket.close();
+                } else {
+                    // Use existing sockets for communications
+                    sender.sendData(message);
+                }
             } catch (InterruptedException ie) {
                 System.err.println("TCPSenderThread.java: " + ie.getMessage());
             } catch (IOException ioe) {

@@ -74,11 +74,9 @@ public class DeregistrationHandler {
 
                 registry.getConnectedNodes().remove(key);
             }else{
-                // Need to communicate with an unregistered node --> create a new TCPSender connection
-                Socket socket = new Socket(hostName, portNum);
-                TCPSender sender = new TCPSender(socket);
-                sender.sendData(deregisterResponse.getBytes());
-                socket.close();
+                // Need to communicate with an unregistered node
+                Packet packet = new Packet(key, deregisterResponse.getBytes());
+                registry.getSenderThread().addToQueue(packet);
             }
         } catch (IOException e) {
             System.err.println(e.getMessage());
