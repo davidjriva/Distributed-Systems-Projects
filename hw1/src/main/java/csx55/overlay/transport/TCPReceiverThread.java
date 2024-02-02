@@ -1,12 +1,12 @@
 package csx55.overlay.transport;
 
-import java.net.Socket;
+import csx55.overlay.node.Node;
+import csx55.overlay.wireformats.EventFactory;
 import csx55.overlay.wireformats.Event;
+import java.net.Socket;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.SocketException;
-import csx55.overlay.node.Node;
-import csx55.overlay.wireformats.EventFactory;
 import java.util.Arrays;
 
 public class TCPReceiverThread implements Runnable {

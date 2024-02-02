@@ -3,10 +3,7 @@ package csx55.overlay.node;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
-import csx55.overlay.transport.TCPServerThread;
-import csx55.overlay.transport.TCPReceiverThread;
-import csx55.overlay.transport.TCPSender;
-import csx55.overlay.transport.TCPSenderThread;
+import csx55.overlay.transport.*;
 import csx55.overlay.util.Packet;
 import csx55.overlay.wireformats.Event;
 import csx55.overlay.wireformats.ConnectWithNeighborEvent;
@@ -23,11 +20,14 @@ public abstract class Node {
         try {
             this.serverThread = new TCPServerThread(serverPort, this, connectedNodes);
             this.senderThread = new TCPSenderThread(this);
-            this.serverPort = serverThread.getServerPort();
         } catch(IOException e) {
             System.err.println(e.getMessage());
         }
 
+    }
+    
+    public void initializeServerPort() {
+        this.serverPort = serverThread.getServerPort();
     }
 
     public void initializeServerThread() {

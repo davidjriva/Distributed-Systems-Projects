@@ -1,15 +1,15 @@
-package csx55.overlay.node;
+package csx55.overlay.util;
 
+import csx55.overlay.wireformats.*;
+import csx55.overlay.transport.TCPSender;
+import csx55.overlay.dijkstra.Link;
+import csx55.overlay.node.Registry;
+import csx55.overlay.node.NodeInfo;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
 import java.util.HashSet;
 import java.util.Set;
-import csx55.overlay.wireformats.MessagingNodesListEvent;
-import csx55.overlay.wireformats.LinkWeightsEvent;
-import csx55.overlay.wireformats.TaskInitiateEvent;
-import csx55.overlay.transport.TCPSender;
-import csx55.overlay.util.Packet;
 import java.io.IOException;
 
 public class OverlayHandler {

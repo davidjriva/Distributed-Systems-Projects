@@ -1,11 +1,9 @@
 package csx55.overlay.node;
 
-import csx55.overlay.transport.TCPSender;
-import csx55.overlay.transport.TCPReceiverThread;
-import csx55.overlay.wireformats.Event;
-import csx55.overlay.wireformats.EventFactory;
-import csx55.overlay.wireformats.EventType;
-
+import csx55.overlay.transport.*;
+import csx55.overlay.wireformats.*;
+import csx55.overlay.util.StatTracker;
+import csx55.overlay.dijkstra.*;
 import java.util.Scanner;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -17,26 +15,6 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.HashSet;
-
-import csx55.overlay.wireformats.RegisterRequestEvent;
-import csx55.overlay.wireformats.DeregisterRequestEvent;
-import csx55.overlay.wireformats.RegisterResponseEvent;
-import csx55.overlay.wireformats.DeregisterResponseEvent;
-import csx55.overlay.wireformats.MessagingNodesListEvent;
-import csx55.overlay.wireformats.ConnectWithNeighborEvent;
-import csx55.overlay.wireformats.LinkWeightsEvent;
-import csx55.overlay.wireformats.TaskInitiateEvent;
-import csx55.overlay.wireformats.TransmitPayloadEvent;
-import csx55.overlay.wireformats.TaskCompleteEvent;
-import csx55.overlay.wireformats.TrafficSummaryEvent;
-import csx55.overlay.wireformats.TrafficSummaryResponseEvent;
-import csx55.overlay.util.StatTracker;
-import csx55.overlay.dijkstra.DijkstraShortestPath;
-import csx55.overlay.dijkstra.ShortestPathResult;
-
-//DEBUGGING:
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class MessagingNodeEventHandler {
     MessagingNode mn;
@@ -105,6 +83,7 @@ public class MessagingNodeEventHandler {
         try{
             // stop the server
             mn.getTCPServerThread().stopServer();
+            mn.getSenderThread().stop();
 
             // close all remaining connections
             for (NodeInfo nodeInfo : mn.getConnectedNodes().values()) {

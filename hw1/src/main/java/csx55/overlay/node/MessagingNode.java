@@ -1,12 +1,8 @@
 package csx55.overlay.node;
 
-import csx55.overlay.transport.TCPSender;
-import csx55.overlay.transport.TCPReceiverThread;
-import csx55.overlay.transport.TCPSenderThread;
-import csx55.overlay.wireformats.Event;
-import csx55.overlay.wireformats.EventType;
-
-import java.util.Scanner;
+import csx55.overlay.transport.*;
+import csx55.overlay.wireformats.*;
+import csx55.overlay.util.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -15,21 +11,6 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import csx55.overlay.wireformats.RegisterRequestEvent;
-import csx55.overlay.wireformats.DeregisterRequestEvent;
-import csx55.overlay.wireformats.RegisterResponseEvent;
-import csx55.overlay.wireformats.DeregisterResponseEvent;
-import csx55.overlay.wireformats.MessagingNodesListEvent;
-import csx55.overlay.wireformats.ConnectWithNeighborEvent;
-import csx55.overlay.wireformats.LinkWeightsEvent;
-import csx55.overlay.wireformats.TaskInitiateEvent;
-import csx55.overlay.wireformats.TransmitPayloadEvent;
-import csx55.overlay.wireformats.TrafficSummaryEvent;
-import csx55.overlay.wireformats.TaskCompleteEvent;
-import csx55.overlay.wireformats.TrafficSummaryResponseEvent;
-import csx55.overlay.util.StatTracker;
-import csx55.overlay.util.Packet;
 
 public class MessagingNode extends Node {
     private String registryName;
@@ -150,6 +131,7 @@ public class MessagingNode extends Node {
         MessagingNode mn = new MessagingNode(registryName, registryPort);
         mn.initializeServerThread();
         mn.initializeSenderThread();
+        mn.initializeServerPort();
         
         System.out.println("Server port= " + mn.getTCPServerThread().getServerPort());
 

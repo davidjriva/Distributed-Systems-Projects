@@ -1,4 +1,6 @@
-package csx55.overlay.node;
+package csx55.overlay.dijkstra;
+
+import csx55.overlay.node.NodeInfo;
 
 public class Link {
     private NodeInfo from;

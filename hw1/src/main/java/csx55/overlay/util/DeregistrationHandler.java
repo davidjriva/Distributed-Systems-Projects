@@ -1,19 +1,11 @@
-package csx55.overlay.node;
+package csx55.overlay.util;
 
-import java.util.Scanner;
-import csx55.overlay.wireformats.Event;
-import csx55.overlay.wireformats.RegisterRequestEvent;
-import csx55.overlay.wireformats.RegisterResponseEvent;
-import csx55.overlay.wireformats.DeregisterRequestEvent;
-import csx55.overlay.wireformats.DeregisterResponseEvent;
-import csx55.overlay.wireformats.RegistrationResult;
-import csx55.overlay.transport.TCPSender;
-import csx55.overlay.transport.TCPSenderThread;
-import csx55.overlay.util.Packet;
+import csx55.overlay.wireformats.*;
+import csx55.overlay.node.*;
+import csx55.overlay.transport.*;
 import java.net.Socket;
-import csx55.overlay.wireformats.EventType;
-import csx55.overlay.node.NodeInfo;
 import java.io.IOException;
+import java.util.Scanner;
 
 public class DeregistrationHandler {
     private static final String DEREGISTER_SUCCESS = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is now (%d)";

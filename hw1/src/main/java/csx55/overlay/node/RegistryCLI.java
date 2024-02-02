@@ -1,7 +1,7 @@
 package csx55.overlay.node;
 
 import java.util.Scanner;
-
+import csx55.overlay.util.OverlayHandler;
 
 public class RegistryCLI {
     private final Registry registry;

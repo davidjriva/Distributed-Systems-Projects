@@ -10,17 +10,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import csx55.overlay.transport.TCPSender;
-import csx55.overlay.wireformats.EventType;
-import csx55.overlay.wireformats.Event;
-import csx55.overlay.wireformats.RegisterRequestEvent;
-import csx55.overlay.wireformats.DeregisterRequestEvent;
-import csx55.overlay.wireformats.ConnectWithNeighborEvent;
-import csx55.overlay.wireformats.TaskCompleteEvent;
-import csx55.overlay.wireformats.TrafficSummaryEvent;
-import csx55.overlay.wireformats.TrafficSummaryResponseEvent;
-import csx55.overlay.util.Packet;
 import java.util.concurrent.atomic.AtomicInteger;
+import csx55.overlay.transport.TCPSender;
+import csx55.overlay.wireformats.*;
+import csx55.overlay.util.*;
 
 public class Registry extends Node {
     private final RegistrationHandler registrationHandler;
@@ -178,6 +171,7 @@ public class Registry extends Node {
         Registry registry = new Registry(portNum);
         registry.initializeServerThread();
         registry.initializeSenderThread();
+        registry.initializeServerPort();
 
         System.out.println("Server port= " + args[0]);
 
