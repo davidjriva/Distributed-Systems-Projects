@@ -106,7 +106,7 @@ public class Registry extends Node {
 
     private void requeryForTrafficSummaries() {
         // Requery the nodes for more current information
-        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent((byte) 1);
+        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent(EventType.TRAFFIC_SUMMARY_FAILURE);
         sendMessageToAllNodes(trafficSummaryResponse);
     }
 
@@ -117,7 +117,7 @@ public class Registry extends Node {
         prevTotalMessagesReceived.set(0);
     
         // Send TRAFFIC_SUMMARY_RESPONSE event to signal all messaging nodes to clear their statTrackers
-        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent((byte) 0);
+        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent(EventType.TRAFFIC_SUMMARY_SUCCESS);
         sendMessageToAllNodes(trafficSummaryResponse);
     }
 

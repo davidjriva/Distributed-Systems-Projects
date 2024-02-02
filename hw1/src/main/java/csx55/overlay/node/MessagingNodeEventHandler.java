@@ -166,6 +166,15 @@ public class MessagingNodeEventHandler {
         String key = mn.generateKey(hostName, serverPort);
 
         TaskCompleteEvent taskCompleteEvent = new TaskCompleteEvent(key);
+
+        // Wait for all messages in queue to be sent before reporting completeness (mechanisms in place in registry ensures that it will requery for more current info if needed)
+        while (mn.getSenderThread().getQueueSize() != 0) {
+            try{
+                Thread.sleep(10);
+            } catch (InterruptedException ie) {
+                System.err.println(ie.getMessage());
+            }
+        }
         
         String registryName = mn.getRegistryName();
         int registryPort = mn.getRegistryPort();
@@ -210,7 +219,7 @@ public class MessagingNodeEventHandler {
     public void handleTrafficSummaryResponse(TrafficSummaryResponseEvent t) {
         byte statusCode = t.getStatusCode();
 
-        if (statusCode == 0) {
+        if (statusCode == EventType.TRAFFIC_SUMMARY_SUCCESS) {
             // Registry has received all messaging nodes stats from the system. 
             // Reset all counters
             mn.getStatTracker().resetAllCounters();

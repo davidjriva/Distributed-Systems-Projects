@@ -25,10 +25,8 @@ public class MessagingNodesListEvent implements Event {
         ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
         DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 
-        // reads numConnections
         this.numConnections = din.readInt();
 
-        //reads in hostNamePortList
         this.hostNamePortList = new ArrayList<>();
         for (int i = 0; i < numConnections; i++) {
             int elementLength = din.readInt();
@@ -42,7 +40,6 @@ public class MessagingNodesListEvent implements Event {
         din.close();
     }
 
-    // Allows writing a messageType, ipAddress, and portNum in that order
     public byte[] getBytes() throws IOException {
         byte[] marshalledBytes = null;
 
@@ -51,10 +48,8 @@ public class MessagingNodesListEvent implements Event {
 
         dout.writeInt(getMessageType());
 
-        // Write numConnections
         dout.writeInt(numConnections);
 
-        // Write all the info from hostNamePortList
         for (String hostNamePort : hostNamePortList){
             byte[] hostNamePortBytes = hostNamePort.getBytes();
             int elementLength = hostNamePortBytes.length;

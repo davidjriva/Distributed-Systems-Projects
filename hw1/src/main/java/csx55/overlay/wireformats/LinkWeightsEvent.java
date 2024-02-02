@@ -22,10 +22,8 @@ public class LinkWeightsEvent implements Event{
         ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
         DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 
-        // reads numLinks
         this.numLinks = din.readInt();
 
-        //reads in links
         this.links = new ArrayList<>();
         for (int i = 0; i < numLinks; i++) {
             int elementLength = din.readInt();
@@ -47,10 +45,8 @@ public class LinkWeightsEvent implements Event{
 
         dout.writeInt(getMessageType());
 
-        // Write numConnections
         dout.writeInt(numLinks);
 
-        // Write all the info from hostNamePortList
         for (String link : links){
             byte[] linkBytes = link.getBytes();
             int elementLength = linkBytes.length;

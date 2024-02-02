@@ -21,21 +21,18 @@ public class RegisterRequestEvent implements Event {
         ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
         DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 
-        // reads in ipAddress
         int ipAddressLength = din.readInt();
         byte[] ipAddressBytes = new byte[ipAddressLength];
         din.readFully(ipAddressBytes);
 
         this.ipAddress = new String(ipAddressBytes);
 
-        //reads in portNum
         this.portNum = din.readInt();
 
         baInputStream.close();
         din.close();
     }
 
-    // Allows writing a messageType, ipAddress, and portNum in that order
     public byte[] getBytes() throws IOException {
         byte[] marshalledBytes = null;
 

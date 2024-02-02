@@ -19,14 +19,12 @@ public class TaskInitiateEvent implements Event{
         ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
         DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 
-        //reads in rounds
         this.rounds = din.readInt();
 
         baInputStream.close();
         din.close();
     }
 
-    // Allows writing a messageType and rounds
     public byte[] getBytes() throws IOException {
         byte[] marshalledBytes = null;
 

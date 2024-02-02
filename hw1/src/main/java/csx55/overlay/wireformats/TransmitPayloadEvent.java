@@ -10,10 +10,8 @@ import java.io.DataOutputStream;
 import java.util.ArrayList;
 
 public class TransmitPayloadEvent implements Event {
-    // Random number
     int payload;
 
-    // The path and number of nodes along the path
     int numNodes; 
     ArrayList<String> path;    
     
@@ -31,13 +29,10 @@ public class TransmitPayloadEvent implements Event {
         ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
         DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
         
-        // reads payload
         this.payload = din.readInt();
 
-        // reads numLinks
         this.numNodes = din.readInt();
 
-        //reads in nodes into path
         this.path = new ArrayList<>();
         for (int i = 0; i < numNodes; i++) {
             int elementLength = din.readInt();
@@ -59,10 +54,8 @@ public class TransmitPayloadEvent implements Event {
 
         dout.writeInt(getMessageType());
 
-        // Transmit payload
         dout.writeInt(payload);
 
-        // Transmit numNodes & path
         dout.writeInt(numNodes);
 
         for (String node : path) {
