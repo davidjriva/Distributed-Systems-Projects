@@ -225,7 +225,7 @@ public class MessagingNodeEventHandler {
             mn.getStatTracker().resetAllCounters();
         } else {
             // Registry is querying for stats
-            // Formulate a traffic summary response and send it to the registry
+            // Formulate a more current traffic summary response and send it to the registry
             StatTracker statTracker = mn.getStatTracker();
 
             String key = mn.generateKey(mn.getHostName(), mn.getServerPort());
