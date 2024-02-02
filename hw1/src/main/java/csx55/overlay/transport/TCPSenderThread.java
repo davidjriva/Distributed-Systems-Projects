@@ -69,8 +69,6 @@ public class TCPSenderThread implements Runnable{
             } catch (IOException ioe) {
                 System.err.println("TCPSenderThread.java: " + ioe.getMessage());
             }
-
-            // TEST COMMIT
         }
     }
 }
