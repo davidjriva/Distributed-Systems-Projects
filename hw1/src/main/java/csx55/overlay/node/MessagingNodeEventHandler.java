@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Collections;
+import java.util.Map;
 
 public class MessagingNodeEventHandler {
     MessagingNode mn;
@@ -96,12 +98,13 @@ public class MessagingNodeEventHandler {
             System.err.println(ioe.getMessage());
         }
     }
-
+    
+    ConcurrentHashMap<String, ShortestPathResult> shortestPaths;
     public void handleTaskInitiate(TaskInitiateEvent t) {
         int rounds = t.getRounds();
 
         ConcurrentHashMap<String, ArrayList<String>> links = new ConcurrentHashMap<>(mn.getLinks());
-        ConcurrentHashMap<String, ShortestPathResult> shortestPaths = new ConcurrentHashMap<>(); // cache for computed shortest paths
+        shortestPaths = new ConcurrentHashMap<>(); // Establish cache for computed shortest paths
 
         try{
             // Get the host name of the current machine
@@ -181,6 +184,10 @@ public class MessagingNodeEventHandler {
         String registryKey = mn.generateKey(registryName, registryPort);
 
         mn.sendEventToDestination(registryKey, taskCompleteEvent);
+    }
+
+    public Map<String, ShortestPathResult> getShortestPaths() {
+        return Collections.unmodifiableMap(shortestPaths);
     }
 
     public void handleTransmitPayload(TransmitPayloadEvent t) {

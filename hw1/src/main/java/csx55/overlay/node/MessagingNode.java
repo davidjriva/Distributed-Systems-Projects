@@ -3,12 +3,15 @@ package csx55.overlay.node;
 import csx55.overlay.transport.*;
 import csx55.overlay.wireformats.*;
 import csx55.overlay.util.*;
+import csx55.overlay.dijkstra.ShortestPathResult;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -120,6 +123,11 @@ public class MessagingNode extends Node {
     
     public synchronized StatTracker getStatTracker() {
         return statTracker;
+    }
+
+    // Returns a read-only copy of the shortest path map (thread-safe)
+    public Map<String, ShortestPathResult> getShortestPaths() {
+        return Collections.unmodifiableMap(messagingNodeEventHandler.getShortestPaths());
     }
 
     public static void main(String[] args){
