@@ -106,6 +106,11 @@ public class MessagingNodeEventHandler {
         ConcurrentHashMap<String, ArrayList<String>> links = new ConcurrentHashMap<>(mn.getLinks());
         shortestPaths = new ConcurrentHashMap<>(); // Establish cache for computed shortest paths
 
+        // Case: Start has been called by registry before links were sent out --> do nothing.
+        if (links.size() == 0) {
+            return;
+        }
+
         try{
             // Get the host name of the current machine
             String ipAddress = mn.getIpAddress();
@@ -116,30 +121,16 @@ public class MessagingNodeEventHandler {
                 for (int j = 0; j < numMessagesPerRound; j++) {
                     // Find list of available nodes (excluding this node and choose a random one)
                     HashSet<String> availableNodes = new HashSet<>(links.keySet());
-                    String currKey = currHostName + ":" + mn.getServerPort();
+                    String currKey = mn.generateKey(currHostName, mn.getServerPort());
 
                     availableNodes.remove(currKey);
 
                     String randomNode = getRandomElement(availableNodes);
                     
                     String key =  currKey + "->" + randomNode;
-                    // System.out.println("Routing a message: " + key);
                     
                     // Check cache for shortest path, if not found then compute and cache it.
-                    ShortestPathResult shortestPath;
-                    if (!shortestPaths.containsKey(key)){
-                        // Compute and cache the path
-                        DijkstraShortestPath djikstraShortestPath = new DijkstraShortestPath(links);
-                        shortestPath = djikstraShortestPath.findShortestPath(currKey, randomNode);
-
-                        shortestPaths.put(key, shortestPath);
-                    } else {
-                        shortestPath = shortestPaths.get(key);
-                    }
-
-                    // System.out.println("Shortest Path: ");
-                    // System.out.println(shortestPath);
-                    
+                    ShortestPathResult shortestPath = determineShortestPath(key, links, currKey, randomNode);
                     ArrayList<String> path = new ArrayList<>(shortestPath.getPath());
 
                     // Get a number as payload
@@ -164,13 +155,11 @@ public class MessagingNodeEventHandler {
         }
         
         // Send a TASK_COMPLETE since all messages have been sent, relays will continue to happen in the background
-        String hostName = mn.getHostName();
-        int serverPort = mn.getServerPort(); 
-        String key = mn.generateKey(hostName, serverPort);
+        String currKey = mn.generateKey(mn.getHostName(), mn.getServerPort());
 
-        TaskCompleteEvent taskCompleteEvent = new TaskCompleteEvent(key);
+        TaskCompleteEvent taskCompleteEvent = new TaskCompleteEvent(currKey);
 
-        // Wait for all messages in queue to be sent before reporting completeness (mechanisms in place in registry ensures that it will requery for more current info if needed)
+        // Attempt to wait for all messages in queue to be sent before reporting completeness (minimizes registry requeries that are necessary)
         while (mn.getSenderThread().getQueueSize() != 0) {
             try{
                 Thread.sleep(10);
@@ -184,6 +173,20 @@ public class MessagingNodeEventHandler {
         String registryKey = mn.generateKey(registryName, registryPort);
 
         mn.sendEventToDestination(registryKey, taskCompleteEvent);
+    }
+
+    private ShortestPathResult determineShortestPath(String key, ConcurrentHashMap<String, ArrayList<String>> links, String currKey, String randomNode) {
+        if (!shortestPaths.containsKey(key)){
+            // Compute and cache the path
+            DijkstraShortestPath djikstraShortestPath = new DijkstraShortestPath(links);
+            ShortestPathResult shortestPath = djikstraShortestPath.findShortestPath(currKey, randomNode);
+
+            shortestPaths.put(key, shortestPath);
+            return shortestPath;
+        } else {
+            // Return shortest path from cache
+            return shortestPaths.get(key);
+        }
     }
 
     public Map<String, ShortestPathResult> getShortestPaths() {
