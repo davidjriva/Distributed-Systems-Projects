@@ -20,4 +20,12 @@ public class TCPSender {
         dout.write(dataToSend, 0, dataLength);
         dout.flush();
     }
+
+    public void closeSender() {
+        try{
+            socket.close();
+        } catch (IOException ioe) {
+            System.err.println("TCPSender.java: Issue closing socket " + ioe.getMessage());
+        }
+    }
 }

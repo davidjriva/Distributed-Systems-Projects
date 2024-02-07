@@ -3,6 +3,7 @@ package csx55.overlay.util;
 import csx55.overlay.wireformats.*;
 import csx55.overlay.node.*;
 import csx55.overlay.transport.*;
+import csx55.overlay.util.Packet;
 import java.net.Socket;
 import java.io.IOException;
 import java.util.Scanner;
@@ -23,7 +24,7 @@ public class DeregistrationHandler {
         int portNum = request.getPortNum();
 
         String key = registry.generateKey(hostName, portNum);
-   
+        
         NodeInfo nodeInfo = registry.getConnectedNodes().get(key);
 
         RegistrationResult result = validateDeregistration(request.getIpAddress(), socket, nodeInfo, hostName, portNum);
@@ -47,10 +48,17 @@ public class DeregistrationHandler {
 
     public void sendDeregistrationResponse(byte statusCode, String additionalInfo, NodeInfo nodeInfo, String hostName, int portNum) {
         try {
-            String key = nodeInfo.getKey();
             Event deregisterResponse = new DeregisterResponseEvent(statusCode, additionalInfo);
             
-            if (nodeInfo != null){
+            if (nodeInfo == null) {
+                // Need to communicate with an unregistered node
+                Socket socket = new Socket(hostName, portNum);
+                TCPSender tempSender = new TCPSender(socket);
+                tempSender.sendData(deregisterResponse.getBytes());
+                tempSender.closeSender();
+            }else {
+                String key = nodeInfo.getKey();
+                
                 Packet packet = new Packet(key, deregisterResponse.getBytes());
                 TCPSenderThread senderThread = registry.getSenderThread();
                 senderThread.addToQueue(packet);
@@ -65,10 +73,6 @@ public class DeregistrationHandler {
                 }
 
                 registry.getConnectedNodes().remove(key);
-            }else{
-                // Need to communicate with an unregistered node
-                Packet packet = new Packet(key, deregisterResponse.getBytes());
-                registry.getSenderThread().addToQueue(packet);
             }
         } catch (IOException e) {
             System.err.println(e.getMessage());
