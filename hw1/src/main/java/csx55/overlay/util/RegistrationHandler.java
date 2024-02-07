@@ -58,7 +58,12 @@ public class RegistrationHandler {
             Event registerResponse = new RegisterResponseEvent(statusCode, additionalInfo);
             Packet packet = new Packet(key, registerResponse.getBytes());
 
-            registry.getSenderThread().addToQueue(packet);
+            if (registry.getConnectedNodes().contains(key)) {
+                registry.getSenderThread().addToQueue(packet);
+            } else {
+                // Edge case: IP mismatch, so it is not registered
+                nodeInfo.getSender().sendData(registerResponse.getBytes());
+            }
         } catch(IOException e) {
             // remove the messagingNode if connection is lost
             String hostName = nodeInfo.getHostName();
