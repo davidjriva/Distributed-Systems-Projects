@@ -1,6 +1,7 @@
 package csx55.overlay.transport;
 
 import csx55.overlay.node.Node;
+import csx55.overlay.node.Registry;
 import csx55.overlay.wireformats.EventFactory;
 import csx55.overlay.wireformats.Event;
 import java.net.Socket;
@@ -22,9 +23,8 @@ public class TCPReceiverThread implements Runnable {
     
     @Override
     public void run() {
-        // System.out.println("Setting up a new TCPReceiverThread with id: " + Thread.currentThread().getId() + " listening to socket " + socket);
-        
         int dataLength;
+
         while (this.socket != null) {
             try {
                 dataLength = din.readInt();
@@ -43,7 +43,5 @@ public class TCPReceiverThread implements Runnable {
                 break;
             }
         }
-
-        // System.out.println("Ending a new TCPReceiverThread with id: " + Thread.currentThread().getId() + " listening to socket " + socket);
     }
 }

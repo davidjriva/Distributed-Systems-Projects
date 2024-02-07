@@ -21,6 +21,10 @@ public class Registry extends Node {
     
     private final OverlayHandler overlayHandler;
 
+    public OverlayHandler getOverlayHandler() {
+        return overlayHandler;
+    }
+
     public Registry(int port) {
         super(port);
         this.registrationHandler = new RegistrationHandler(this);
@@ -71,7 +75,8 @@ public class Registry extends Node {
             synchronized(trafficSummaryEvents) {
                 int totalMessagesSent = 0;
                 int totalMessagesReceived = 0;
-
+                int expectedMessagesSent = getConnectedNodes().size() * 5 * overlayHandler.getNumRounds();
+                
                 for (TrafficSummaryEvent tse : trafficSummaryEvents) {
                     totalMessagesReceived += tse.getReceiveTracker();
                     totalMessagesSent += tse.getSendTracker();
@@ -88,7 +93,7 @@ public class Registry extends Node {
                         communicateTrafficSummarySuccess();
                         printTrafficSummaryTable();
                     }
-                } else if (totalMessagesSent != totalMessagesReceived) {
+                } else if (totalMessagesSent != expectedMessagesSent || totalMessagesSent != totalMessagesReceived) {
                     requeryForTrafficSummaries();
                 } else {
                     communicateTrafficSummarySuccess();
@@ -175,7 +180,7 @@ public class Registry extends Node {
 
         System.out.println("Server port= " + args[0]);
 
-        RegistryCLI registryCLI = new RegistryCLI(registry);
+        RegistryCLI registryCLI = new RegistryCLI(registry, registry.overlayHandler);
         registryCLI.runCLI();
     }
 }

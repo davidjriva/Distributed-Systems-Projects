@@ -8,9 +8,9 @@ public class RegistryCLI {
     private final Registry registry;
     private final OverlayHandler overlayHandler;
 
-    public RegistryCLI(Registry registry) {
+    public RegistryCLI(Registry registry, OverlayHandler overlayHandler) {
         this.registry = registry;
-        this.overlayHandler = new OverlayHandler(registry);
+        this.overlayHandler = overlayHandler;
     }
 
     public void runCLI() {
@@ -31,7 +31,7 @@ public class RegistryCLI {
                 overlayHandler.sendOverlayLinkWeights();
             } else if(input.startsWith("start")){
                 overlayHandler.sendStartCommand(input);
-            } 
+            }
         }
     }
 

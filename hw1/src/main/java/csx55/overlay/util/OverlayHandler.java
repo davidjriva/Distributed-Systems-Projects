@@ -21,6 +21,8 @@ public class OverlayHandler {
 
     private Random random;
 
+    private Integer numRounds = -1; // Tracks numRounds specified by start event.
+
     public OverlayHandler(Registry registry) {
         this.registry = registry;
         this.random = new Random(42);
@@ -177,12 +179,12 @@ public class OverlayHandler {
 
         if(parts.length == 2){
             try{
-                numRounds = Integer.parseInt(parts[1]);
+                this.numRounds = Integer.parseInt(parts[1]);
             }catch(NumberFormatException nfe){
                 System.err.println(nfe.getMessage() + ". Input must be a valid number");
             }
 
-            if(numRounds <= 0){
+            if(this.numRounds <= 0){
                 System.out.println("Registry: numRounds should be greater than or equal to zero");
             } else {
                 TaskInitiateEvent taskInitiateEvent = new TaskInitiateEvent(numRounds);
@@ -191,6 +193,10 @@ public class OverlayHandler {
         } else {
             System.err.println("Registry: Please specify start number-of-rounds");
         }
+    }
+
+    public int getNumRounds() {
+        return numRounds;
     }
 
     public void listWeights() {
