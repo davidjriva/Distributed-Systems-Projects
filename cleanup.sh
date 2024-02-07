@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MACHINES=("santa-fe" "ferrari" "porsche" "eldora" "tokyo" "montgomery")
+MACHINES=("santa-fe" "ferrari" "porsche" "eldora" "tokyo" "montgomery" "cooper" "sunlight" "vail" "telluride")
 
 for machine in "${MACHINES[@]}"; do
     echo "Cleaning up $machine"
