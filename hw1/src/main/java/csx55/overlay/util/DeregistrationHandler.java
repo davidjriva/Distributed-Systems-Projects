@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class DeregistrationHandler {
-    private static final String DEREGISTER_SUCCESS = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is now (%d)";
+    public static final String DEREGISTER_SUCCESS = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is now (%d)";
     private static final String UNREGISTERED_NODE_ATTEMPTING_DEREGISTER_MESSAGE = "Deregistration request unsuccessful. This node(%s) has not yet registered with the registry";
     private static final String MISMATCH_IP_ADDRESS_MESSAGE = "Deregistration request unsuccessful. Mismatch in IP address provided(%s) and the one associated with this socket(%s)";
 

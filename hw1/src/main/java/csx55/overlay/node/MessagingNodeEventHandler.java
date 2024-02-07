@@ -4,6 +4,7 @@ import csx55.overlay.transport.*;
 import csx55.overlay.wireformats.*;
 import csx55.overlay.util.StatTracker;
 import csx55.overlay.dijkstra.*;
+import csx55.overlay.util.DeregistrationHandler;
 import java.util.Scanner;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -82,20 +83,22 @@ public class MessagingNodeEventHandler {
     public void handleDeregistrationResponse(DeregisterResponseEvent d) {
         System.out.println(d.getAdditionalInfo());
 
-        try{
-            // stop the server
-            mn.getTCPServerThread().stopServer();
-            mn.getSenderThread().stop();
+        if(d.getAdditionalInfo().startsWith("Deregistration request successful.")) {
+            try{
+                // stop the server
+                mn.getTCPServerThread().stopServer();
+                mn.getSenderThread().stop();
 
-            // close all remaining connections
-            for (NodeInfo nodeInfo : mn.getConnectedNodes().values()) {
-                nodeInfo.getSocket().close();
+                // close all remaining connections
+                for (NodeInfo nodeInfo : mn.getConnectedNodes().values()) {
+                    nodeInfo.getSocket().close();
+                }
+
+                // exit and terminate the process
+                System.exit(0);
+            } catch (IOException ioe) {
+                System.err.println(ioe.getMessage());
             }
-
-            // exit and terminate the process
-            System.exit(0);
-        } catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
         }
     }
     
