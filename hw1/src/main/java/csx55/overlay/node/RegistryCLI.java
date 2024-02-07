@@ -1,6 +1,7 @@
 package csx55.overlay.node;
 
 import java.util.Scanner;
+import java.util.Collections;
 import csx55.overlay.util.OverlayHandler;
 
 public class RegistryCLI {
@@ -23,7 +24,7 @@ public class RegistryCLI {
                 listMessagingNodes();
             } else if(input.startsWith("setup-overlay")){
                 overlayHandler.clearOverlay();
-                setupOverlay(input);
+                overlayHandler.setupOverlay(input, Collections.unmodifiableMap(registry.getConnectedNodes()));
             } else if(input.equals("list-weights")){
                 overlayHandler.listWeights();
             } else if(input.equals("send-overlay-link-weights")){
@@ -38,9 +39,5 @@ public class RegistryCLI {
         for (String hostNameAndPort : registry.getConnectedNodes().keySet()){
             System.out.println(hostNameAndPort);
         }
-    }
-
-    public void setupOverlay(String input) {
-        overlayHandler.setupOverlay(input, registry.getConnectedNodes());
     }
 }
