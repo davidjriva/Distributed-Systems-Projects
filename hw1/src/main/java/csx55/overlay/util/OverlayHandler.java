@@ -31,9 +31,9 @@ public class OverlayHandler {
     public void setupOverlay(String input, Map<String, NodeInfo> connectedNodes) {
         String[] parts = input.split(" ");
 
+        int numConnections = 4;
         if (parts.length == 2) {
             // 1.) Read in an integer number following setup-overlay that is the number of connections
-            int numConnections = Integer.MIN_VALUE;
             try{
                 numConnections = Integer.parseInt(parts[1]);
             } catch(NumberFormatException e) {
@@ -46,25 +46,23 @@ public class OverlayHandler {
                 // Since a node cannot connect to itself, we should do +1 here
                 System.err.println("Registry: The number-of-connections specified is more than the available number of messaging nodes");
                 return;
-            }
-            else if(numConnections <= 1){
+            } else if(numConnections <= 1){
                 System.err.println("Registry: The number-of-connections specified must be greater than 1");
                 return;
-            }else{
-                buildConnections(numConnections, connectedNodes);
-
-                // maps a messaging node to the messaging nodes hostname:ip that it will receive in its list
-                ConcurrentHashMap<String, ArrayList<String>> messagingNodesList = buildMessagingNodesList(); 
-
-                // transmits the messaging nodes list
-                for (String destinationKey : messagingNodesList.keySet()){
-                    ArrayList<String> hostNameAndPortList = messagingNodesList.get(destinationKey);
-                    sendMessagingNodesList(destinationKey, hostNameAndPortList);
-                }
             }
-        } else{
-            System.err.println("Registry: Invalid input format. Please specify: setup-overlay number-of-connections");
+        } else if (parts.length < 1) {
+            System.err.println("Registry: Invalid input format. Please specify: 'setup-overlay number-of-connections' or 'setup-overlay' to default to 4 connections");
             return;
+        }
+
+        buildConnections(numConnections, connectedNodes);
+        // maps a messaging node to the messaging nodes hostname:ip that it will receive in its list
+        ConcurrentHashMap<String, ArrayList<String>> messagingNodesList = buildMessagingNodesList(); 
+
+        // transmits the messaging nodes list
+        for (String destinationKey : messagingNodesList.keySet()){
+            ArrayList<String> hostNameAndPortList = messagingNodesList.get(destinationKey);
+            sendMessagingNodesList(destinationKey, hostNameAndPortList);
         }
     }
 
