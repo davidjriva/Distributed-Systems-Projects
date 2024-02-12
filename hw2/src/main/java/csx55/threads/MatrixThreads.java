@@ -62,8 +62,6 @@ public class MatrixThreads {
                     latch.countDown();
                 });
             }  
-            // Get all columns then at the end call addTask():
-            
         }
     }
 
@@ -97,8 +95,8 @@ public class MatrixThreads {
 
     private int sumElementsInMatrix(Matrix m1) {
         int[][] values = m1.getValues();
-        // convert to stream, flatten stream, calculate sum in parallel
-        return Arrays.stream(values).parallel().flatMapToInt(Arrays::stream).sum();
+        // convert to stream, flatten stream, calculate sum
+        return Arrays.stream(values).flatMapToInt(Arrays::stream).sum();
     }
 
     public static void main(String[] args) {

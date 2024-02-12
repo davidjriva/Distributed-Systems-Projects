@@ -17,7 +17,7 @@ public class RunnableTask implements Runnable{
     public void run() {
         this.thread = Thread.currentThread();
 
-        while (isRunning()) {
+        while (isRunning) {
             try{
                 Runnable runnable = (Runnable) taskQueue.take();
                 runnable.run();
@@ -26,13 +26,9 @@ public class RunnableTask implements Runnable{
             }
         }
     }
-
-    public synchronized boolean isRunning() {
-        return isRunning;
-    }
     
     // Stops the thread. Will break it out of the taskQueue.take() blocking call if it's blocking.
-    public synchronized void stop() {
+    public void stop() {
         isRunning = false;
         this.thread.interrupt(); 
     }

@@ -25,7 +25,7 @@ public class ThreadPool {
     }
 
     // Place an item into the queue, waits for space if queue is full
-    public synchronized void addTask(Runnable task) {
+    public void addTask(Runnable task) {
         try{
             taskQueue.put(task);
         } catch (InterruptedException ie) {
