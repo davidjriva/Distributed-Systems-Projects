@@ -15,10 +15,12 @@ public class EventType {
     public static final int TRAFFIC_SUMMARY = 10;
     public static final int TRAFFIC_SUMMARY_RESPONSE = 11;
 
-
     public static final byte REGISTER_SUCCESS = 0;
     public static final byte REGISTER_FAILURE = 1;
 
     public static final byte DEREGISTER_SUCCESS = 0;
     public static final byte DEREGISTER_FAILURE = 1;
+
+    public static final byte TRAFFIC_SUMMARY_SUCCESS = 0;
+    public static final byte TRAFFIC_SUMMARY_FAILURE = 1;
 }

@@ -21,10 +21,8 @@ public class DeregisterResponseEvent implements Event {
         ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
         DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 
-        //reads in portNum
         this.statusCode = din.readByte();
 
-        // reads in ipAddress
         int additionalInfoLength = din.readInt();
         byte[] additionalInfoBytes = new byte[additionalInfoLength];
         din.readFully(additionalInfoBytes);

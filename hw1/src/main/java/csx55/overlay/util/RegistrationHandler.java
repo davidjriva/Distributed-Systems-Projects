@@ -1,17 +1,13 @@
-package csx55.overlay.node;
+package csx55.overlay.util;
 
-import java.util.Scanner;
-import csx55.overlay.wireformats.Event;
-import csx55.overlay.wireformats.RegisterRequestEvent;
-import csx55.overlay.wireformats.RegisterResponseEvent;
-import csx55.overlay.wireformats.DeregisterRequestEvent;
-import csx55.overlay.wireformats.DeregisterResponseEvent;
-import csx55.overlay.wireformats.RegistrationResult;
+import csx55.overlay.wireformats.*;
 import csx55.overlay.transport.TCPSender;
-import java.net.Socket;
-import csx55.overlay.wireformats.EventType;
+import csx55.overlay.util.Packet;
 import csx55.overlay.node.NodeInfo;
+import csx55.overlay.node.Registry;
+import java.net.Socket;
 import java.io.IOException;
+import java.util.Scanner;
 
 public class RegistrationHandler {
     private static final String REGISTRATION_SUCCESS_MESSAGE = "Registration request successful. The number of messaging nodes currently constituting the overlay is (%d)";
@@ -58,13 +54,29 @@ public class RegistrationHandler {
 
     public void sendRegistrationResponse(byte statusCode, String additionalInfo, NodeInfo nodeInfo) {
         try{
+            String key = nodeInfo.getKey();
             Event registerResponse = new RegisterResponseEvent(statusCode, additionalInfo);
-            nodeInfo.getSender().sendData(registerResponse.getBytes());
+            Packet packet = new Packet(key, registerResponse.getBytes());
+
+            if (registry.getConnectedNodes().contains(key)) {
+                registry.getSenderThread().addToQueue(packet);
+            } else {
+                // Edge case: IP mismatch, so it is not registered
+                nodeInfo.getSender().sendData(registerResponse.getBytes());
+            }
         } catch(IOException e) {
             // remove the messagingNode if connection is lost
             String hostName = nodeInfo.getHostName();
             int portNum = nodeInfo.getPortNum();
             String key = registry.generateKey(hostName, portNum);
+
+            while (registry.getSenderThread().getQueueSize() != 0) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ie) {
+                    System.err.println("RegistrationHandler.java: " + ie.getMessage());
+                }
+            }   
 
             registry.getConnectedNodes().remove(key);
             System.err.println(e.getMessage());

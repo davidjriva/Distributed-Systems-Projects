@@ -13,12 +13,19 @@ public class TCPSender {
         dout = new DataOutputStream(socket.getOutputStream());
     }
 
-    public synchronized void sendData(byte[] dataToSend) throws IOException {
+    public void sendData(byte[] dataToSend) throws IOException {
         // System.out.println("[" + Thread.currentThread().getId() + "] sending data.");
-        
         int dataLength = dataToSend.length;
         dout.writeInt(dataLength);
         dout.write(dataToSend, 0, dataLength);
         dout.flush();
+    }
+
+    public void closeSender() {
+        try{
+            socket.close();
+        } catch (IOException ioe) {
+            System.err.println("TCPSender.java: Issue closing socket " + ioe.getMessage());
+        }
     }
 }

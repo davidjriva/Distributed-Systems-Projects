@@ -10,24 +10,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import csx55.overlay.transport.TCPSender;
-
-import csx55.overlay.wireformats.EventType;
-import csx55.overlay.wireformats.Event;
-import csx55.overlay.wireformats.RegisterRequestEvent;
-import csx55.overlay.wireformats.DeregisterRequestEvent;
-import csx55.overlay.wireformats.ConnectWithNeighborEvent;
-import csx55.overlay.wireformats.TaskCompleteEvent;
-import csx55.overlay.wireformats.TrafficSummaryEvent;
-import csx55.overlay.wireformats.TrafficSummaryResponseEvent;
 import java.util.concurrent.atomic.AtomicInteger;
+import csx55.overlay.transport.TCPSender;
+import csx55.overlay.wireformats.*;
+import csx55.overlay.util.*;
 
 public class Registry extends Node {
     private final RegistrationHandler registrationHandler;
     private final DeregistrationHandler deregistrationHandler;
     
     private final OverlayHandler overlayHandler;
+
+    public OverlayHandler getOverlayHandler() {
+        return overlayHandler;
+    }
 
     public Registry(int port) {
         super(port);
@@ -79,7 +75,8 @@ public class Registry extends Node {
             synchronized(trafficSummaryEvents) {
                 int totalMessagesSent = 0;
                 int totalMessagesReceived = 0;
-
+                int expectedMessagesSent = getConnectedNodes().size() * 5 * overlayHandler.getNumRounds();
+                
                 for (TrafficSummaryEvent tse : trafficSummaryEvents) {
                     totalMessagesReceived += tse.getReceiveTracker();
                     totalMessagesSent += tse.getSendTracker();
@@ -96,7 +93,7 @@ public class Registry extends Node {
                         communicateTrafficSummarySuccess();
                         printTrafficSummaryTable();
                     }
-                } else if (totalMessagesSent != totalMessagesReceived) {
+                } else if (totalMessagesSent != expectedMessagesSent || totalMessagesSent != totalMessagesReceived) {
                     requeryForTrafficSummaries();
                 } else {
                     communicateTrafficSummarySuccess();
@@ -114,7 +111,7 @@ public class Registry extends Node {
 
     private void requeryForTrafficSummaries() {
         // Requery the nodes for more current information
-        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent((byte) 1);
+        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent(EventType.TRAFFIC_SUMMARY_FAILURE);
         sendMessageToAllNodes(trafficSummaryResponse);
     }
 
@@ -125,7 +122,7 @@ public class Registry extends Node {
         prevTotalMessagesReceived.set(0);
     
         // Send TRAFFIC_SUMMARY_RESPONSE event to signal all messaging nodes to clear their statTrackers
-        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent((byte) 0);
+        TrafficSummaryResponseEvent trafficSummaryResponse = new TrafficSummaryResponseEvent(EventType.TRAFFIC_SUMMARY_SUCCESS);
         sendMessageToAllNodes(trafficSummaryResponse);
     }
 
@@ -165,8 +162,9 @@ public class Registry extends Node {
     public void sendMessageToAllNodes(Event e) {
         try{
             for(NodeInfo nodeInfo : getConnectedNodes().values()){
-                TCPSender sender = nodeInfo.getSender();
-                sender.sendData(e.getBytes());
+                String key = nodeInfo.getKey();
+                Packet packet = new Packet(key, e.getBytes());
+                getSenderThread().addToQueue(packet);
             }
         } catch (IOException ioe) {
             System.err.println("Registry: Error sending message to all nodes: " + ioe.getMessage());
@@ -177,10 +175,12 @@ public class Registry extends Node {
         int portNum = Integer.parseInt(args[0]);
         Registry registry = new Registry(portNum);
         registry.initializeServerThread();
+        registry.initializeSenderThread();
+        registry.initializeServerPort();
 
         System.out.println("Server port= " + args[0]);
 
-        RegistryCLI registryCLI = new RegistryCLI(registry);
+        RegistryCLI registryCLI = new RegistryCLI(registry, registry.overlayHandler);
         registryCLI.runCLI();
     }
 }
