@@ -18,7 +18,6 @@ public class MatrixThreads {
         this.rand = new Random(seed);
         this.ROWS = matrixDimension;
         this.COLS = matrixDimension;
-        this.latch = new CountDownLatch(matrixDimension * matrixDimension);
     }
 
     private void initializeMatrices() {
@@ -79,8 +78,12 @@ public class MatrixThreads {
     }
 
     private void initializeThreadPool() {
-        int poolCapacity = 50 * threadPoolSize;
+        int poolCapacity = 2500 * threadPoolSize;
         threadPool = new ThreadPool(threadPoolSize, poolCapacity);
+    }
+
+    private void initializeLatch() {
+        latch = new CountDownLatch(matrixDimension * matrixDimension);
     }
 
     private void displayX() {
@@ -91,6 +94,16 @@ public class MatrixThreads {
         }
 
         System.out.println("Sum of the elements in input matrix X = " + sumElementsInMatrix(X));
+    }
+
+    private void displayY() {
+        try {
+            latch.await();
+        } catch(InterruptedException ie) {
+            System.err.println("MatrixThreads.java " + ie.getMessage());
+        }
+
+        System.out.println("Sum of the elements in input matrix Y = " + sumElementsInMatrix(Y));
     }
 
     private int sumElementsInMatrix(Matrix m1) {
@@ -116,13 +129,28 @@ public class MatrixThreads {
         System.out.printf("Sum of the elements in input matrix A = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.A));
         System.out.printf("Sum of the elements in input matrix B = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.B));
         System.out.printf("Sum of the elements in input matrix C = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.C));
-        System.out.printf("Sum of the elements in input matrix D = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.D));
+        System.out.printf("Sum of the elements in input matrix D = %d\n\n", matrixThreads.sumElementsInMatrix(matrixThreads.D));
 
-        long startTime = System.currentTimeMillis();
+        matrixThreads.initializeLatch();
+        long startTime, endTime;
+
+        startTime = System.currentTimeMillis();
         matrixThreads.multiplyMatrices(matrixThreads.A.getValues(), matrixThreads.B.getValues(), matrixThreads.X);
         matrixThreads.displayX();
-        long endTime = System.currentTimeMillis();
+        endTime = System.currentTimeMillis();
 
-        System.out.printf("Time to compute matrix X: %.3fs\n", ((endTime - startTime)/1000.0));
+        System.out.printf("Time to compute matrix X: %.3fs\n\n", ((endTime - startTime)/1000.0));
+        
+        // Reset the latch
+        matrixThreads.initializeLatch();
+
+        startTime = System.currentTimeMillis();
+        matrixThreads.multiplyMatrices(matrixThreads.C.getValues(), matrixThreads.D.getValues(), matrixThreads.Y);
+        matrixThreads.displayY();
+        endTime = System.currentTimeMillis();
+
+        System.out.printf("Time to compute matrix Y: %.3fs\n\n", ((endTime - startTime)/1000.0));
+
+        
     }
 }
