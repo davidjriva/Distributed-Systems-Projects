@@ -7,7 +7,7 @@ import java.util.concurrent.CountDownLatch;
 public class MatrixThreads {
     private final int ROWS, COLS, threadPoolSize, matrixDimension, seed;
     private final Random rand;
-    private Matrix A, B, C, D, X, Y;
+    private Matrix A, B, C, D, X, Y, Z;
     private ThreadPool threadPool;
     private CountDownLatch latch;
 
@@ -27,6 +27,7 @@ public class MatrixThreads {
         D = initializeMatrix();
         X = new Matrix(matrixDimension);
         Y = new Matrix(matrixDimension);
+        Z = new Matrix(matrixDimension);
     }
 
     private Matrix initializeMatrix() {
@@ -86,30 +87,35 @@ public class MatrixThreads {
         latch = new CountDownLatch(matrixDimension * matrixDimension);
     }
 
-    private void displayX() {
-        try {
+    private void displayMatrixAfterCountDown(Matrix matrix, String matrixName) {
+        try{
             latch.await();
-        } catch(InterruptedException ie) {
+        } catch (InterruptedException ie) {
             System.err.println("MatrixThreads.java " + ie.getMessage());
         }
 
-        System.out.println("Sum of the elements in input matrix X = " + sumElementsInMatrix(X));
+        System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
 
-    private void displayY() {
-        try {
-            latch.await();
-        } catch(InterruptedException ie) {
-            System.err.println("MatrixThreads.java " + ie.getMessage());
-        }
-
-        System.out.println("Sum of the elements in input matrix Y = " + sumElementsInMatrix(Y));
-    }
 
     private int sumElementsInMatrix(Matrix m1) {
         int[][] values = m1.getValues();
         // convert to stream, flatten stream, calculate sum
         return Arrays.stream(values).flatMapToInt(Arrays::stream).sum();
+    }
+
+    private double multiplyMatricesAndTime(Matrix m1, Matrix m2, Matrix target, String targetName) {
+        long startTime, endTime;
+
+        //Reset latch
+        initializeLatch();
+
+        startTime = System.currentTimeMillis();
+        multiplyMatrices(m1.getValues(), m2.getValues(), target);
+        displayMatrixAfterCountDown(target, targetName);
+        endTime = System.currentTimeMillis();
+
+        return ((endTime - startTime) / 1000.0);
     }
 
     public static void main(String[] args) {
@@ -131,26 +137,15 @@ public class MatrixThreads {
         System.out.printf("Sum of the elements in input matrix C = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.C));
         System.out.printf("Sum of the elements in input matrix D = %d\n\n", matrixThreads.sumElementsInMatrix(matrixThreads.D));
 
-        matrixThreads.initializeLatch();
-        long startTime, endTime;
+        double XCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.A, matrixThreads.B, matrixThreads.X, "X");
+        System.out.printf("Time to compute matrix X is: %.3fs\n\n", XCalculationTimer);
 
-        startTime = System.currentTimeMillis();
-        matrixThreads.multiplyMatrices(matrixThreads.A.getValues(), matrixThreads.B.getValues(), matrixThreads.X);
-        matrixThreads.displayX();
-        endTime = System.currentTimeMillis();
+        double YCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.C, matrixThreads.D, matrixThreads.Y, "Y");
+        System.out.printf("Time to compute matrix Y is: %.3fs\n\n", YCalculationTimer);
 
-        System.out.printf("Time to compute matrix X: %.3fs\n\n", ((endTime - startTime)/1000.0));
-        
-        // Reset the latch
-        matrixThreads.initializeLatch();
+        double ZCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.X, matrixThreads.Y, matrixThreads.Z, "Z");
+        System.out.printf("Time to compute matrix Z is: %.3fs\n\n", ZCalculationTimer);
 
-        startTime = System.currentTimeMillis();
-        matrixThreads.multiplyMatrices(matrixThreads.C.getValues(), matrixThreads.D.getValues(), matrixThreads.Y);
-        matrixThreads.displayY();
-        endTime = System.currentTimeMillis();
-
-        System.out.printf("Time to compute matrix Y: %.3fs\n\n", ((endTime - startTime)/1000.0));
-
-        
+        System.out.printf("Time to compute matrices X, Y, and Z using a thread pool of size = <%d> is : %.3fs", threadPoolSize, XCalculationTimer + YCalculationTimer + ZCalculationTimer);
     }
 }
