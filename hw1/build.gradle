@@ -9,14 +9,3 @@ plugins {
     id 'application'
 }
  
-repositories {
-    mavenCentral()
-}
- 
-dependencies {
-    implementation 'com.google.guava:guava:32.1.1-jre'
-}
- 
-application {
-    mainClass = 'csx55.overlay.HelloWorld'
-}

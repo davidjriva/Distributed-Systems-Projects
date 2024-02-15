@@ -8,3 +8,7 @@
 plugins {
     id 'application'
 }
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked"
+}
