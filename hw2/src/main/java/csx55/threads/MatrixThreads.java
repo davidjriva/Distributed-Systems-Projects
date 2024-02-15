@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 public class MatrixThreads {
-    private final int ROWS, COLS, threadPoolSize, matrixDimension, seed;
+    private final int threadPoolSize, matrixDimension, seed;
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
     private ThreadPool threadPool;
@@ -16,8 +16,6 @@ public class MatrixThreads {
         this.matrixDimension = matrixDimension;
         this.seed = seed;
         this.rand = new Random(seed);
-        this.ROWS = matrixDimension;
-        this.COLS = matrixDimension;
     }
 
     private void initializeMatrices() {
@@ -40,11 +38,11 @@ public class MatrixThreads {
         A*B = C
         C(i,j) = Summation[A(i,k)*B(k,j)]
     */
-    private void multiplyMatrices(int[][] m1, int[][] m2, Matrix target) {
-        for (int row = 0; row < ROWS; row++) {
+    private void multiplyMatrices(int[] m1, int[] m2, Matrix target) {
+        for (int row = 0; row < matrixDimension; row++) {
             int[] m1Row = getRow(m1, row);
             
-            for (int col = 0; col < COLS; col++) {
+            for (int col = 0; col < matrixDimension; col++) {
                 int[] m2Col = getColumn(m2, col);
                 
                 final int[] currRow = m1Row;
@@ -65,15 +63,18 @@ public class MatrixThreads {
         }
     }
 
-    private int[] getRow(int[][] matrix, int rowIndex) {
-        return matrix[rowIndex];
+    private int[] getRow(int[] values, int rowIndex) {
+        int offSet = matrixDimension * rowIndex;
+        return Arrays.copyOfRange(values, offSet, offSet + matrixDimension);
     }
 
-    private int[] getColumn(int[][] matrix, int colIndex) {
-        int[] column = new int[ROWS];
+    private int[] getColumn(int[] values, int colIndex) {
+        int[] column = new int[matrixDimension];
 
-        for (int innerRow = 0; innerRow < ROWS; innerRow++) {
-            column[innerRow] = matrix[innerRow][colIndex];
+        for (int row = 0; row < matrixDimension; row++) {
+            int offSet = row * matrixDimension;
+            int location = offSet + colIndex;
+            column[row] = values[location];
         }
         return column;
     }
@@ -99,9 +100,13 @@ public class MatrixThreads {
 
 
     private int sumElementsInMatrix(Matrix m1) {
-        int[][] values = m1.getValues();
+        int[] values = m1.getValues();
         // convert to stream, flatten stream, calculate sum
-        return Arrays.stream(values).flatMapToInt(Arrays::stream).sum();
+        int result = 0;
+        for (int val : values) {
+            result += val;
+        }
+        return result;
     }
 
     private double multiplyMatricesAndTime(Matrix m1, Matrix m2, Matrix target, String targetName) {
@@ -133,11 +138,14 @@ public class MatrixThreads {
         matrixThreads.initializeMatrices();
 
         System.out.printf("Sum of the elements in input matrix A = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.A));
+        // System.out.println(matrixThreads.A);
         System.out.printf("Sum of the elements in input matrix B = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.B));
+        // System.out.println(matrixThreads.B);
         System.out.printf("Sum of the elements in input matrix C = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.C));
         System.out.printf("Sum of the elements in input matrix D = %d\n\n", matrixThreads.sumElementsInMatrix(matrixThreads.D));
 
         double XCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.A, matrixThreads.B, matrixThreads.X, "X");
+        // System.out.println(matrixThreads.X);
         System.out.printf("Time to compute matrix X is: %.3fs\n\n", XCalculationTimer);
 
         double YCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.C, matrixThreads.D, matrixThreads.Y, "Y");
