@@ -20,7 +20,7 @@ public class RegistryCLI {
         while(true) {
             input = scanner.nextLine();
 
-            if(input.equals("list-messaging nodes")){
+            if(input.equals("list-messaging-nodes")){
                 listMessagingNodes();
             } else if(input.startsWith("setup-overlay")){
                 overlayHandler.clearOverlay();

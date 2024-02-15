@@ -141,7 +141,7 @@ public class MessagingNode extends Node {
         mn.initializeSenderThread();
         mn.initializeServerPort();
         
-        System.out.println("Server port= " + mn.getTCPServerThread().getServerPort());
+        // System.out.println("Server port= " + mn.getTCPServerThread().getServerPort());
 
         mn.createOneDirectionalConnection(registryName, registryPort);
         mn.registerNode(registryName);

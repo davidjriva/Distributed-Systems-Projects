@@ -178,7 +178,7 @@ public class Registry extends Node {
         registry.initializeSenderThread();
         registry.initializeServerPort();
 
-        System.out.println("Server port= " + args[0]);
+        // System.out.println("Server port= " + args[0]);
 
         RegistryCLI registryCLI = new RegistryCLI(registry, registry.overlayHandler);
         registryCLI.runCLI();

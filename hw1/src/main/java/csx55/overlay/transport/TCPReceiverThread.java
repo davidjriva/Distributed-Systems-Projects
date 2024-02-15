@@ -36,10 +36,10 @@ public class TCPReceiverThread implements Runnable {
 
                 node.onEvent(e, socket);
             } catch (SocketException se) {
-                System.err.println(se.getMessage());
+                //System.err.println(se.getMessage());
                 break;
             } catch (IOException ioe) {
-                System.err.println(ioe.getMessage());
+                //System.err.println(ioe.getMessage());
                 break;
             }
         }

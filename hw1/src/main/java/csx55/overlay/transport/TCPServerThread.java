@@ -56,7 +56,7 @@ public class TCPServerThread implements Runnable {
                 if (!isRunning) {
                     break;
                 }
-                System.err.println(e.getMessage());
+                // System.err.println(e.getMessage());
             }
         }
     }
