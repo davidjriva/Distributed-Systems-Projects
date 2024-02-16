@@ -46,7 +46,8 @@ public class Matrix {
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder("[\n");
+        StringBuilder result = new StringBuilder();
+        result.append("[");
 
         for (int row = 0; row < dimensionality; row++) {
             int offset = row * dimensionality;
@@ -64,7 +65,7 @@ public class Matrix {
             }
         }
 
-        result.append("\n]");
+        result.append("]");
 
         return result.toString();
     }
