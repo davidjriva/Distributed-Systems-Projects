@@ -138,14 +138,14 @@ public class MatrixThreads {
         matrixThreads.initializeMatrices();
 
         System.out.printf("Sum of the elements in input matrix A = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.A));
-        // System.out.println(matrixThreads.A);
+        System.out.println(matrixThreads.A);
         System.out.printf("Sum of the elements in input matrix B = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.B));
-        // System.out.println(matrixThreads.B);
+        System.out.println(matrixThreads.B);
         System.out.printf("Sum of the elements in input matrix C = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.C));
         System.out.printf("Sum of the elements in input matrix D = %d\n\n", matrixThreads.sumElementsInMatrix(matrixThreads.D));
 
         double XCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.A, matrixThreads.B, matrixThreads.X, "X");
-        // System.out.println(matrixThreads.X);
+        System.out.println(matrixThreads.X);
         System.out.printf("Time to compute matrix X is: %.3fs\n\n", XCalculationTimer);
 
         double YCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.C, matrixThreads.D, matrixThreads.Y, "Y");

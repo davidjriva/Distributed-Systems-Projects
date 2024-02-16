@@ -46,6 +46,26 @@ public class Matrix {
 
     @Override
     public String toString() {
-        return Arrays.toString(values);
+        StringBuilder result = new StringBuilder("[\n");
+
+        for (int row = 0; row < dimensionality; row++) {
+            int offset = row * dimensionality;
+            result.append("[");
+            for (int col = 0; col < dimensionality; col++) {
+                int location = offset + col;
+                result.append(values[location]);
+                if (col < dimensionality - 1) {
+                    result.append(", ");
+                }
+            }
+            result.append("]");
+            if (row < dimensionality - 1) {
+                result.append(",\n");
+            }
+        }
+
+        result.append("\n]");
+
+        return result.toString();
     }
 }
