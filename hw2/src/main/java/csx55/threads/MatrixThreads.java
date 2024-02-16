@@ -74,8 +74,6 @@ public class MatrixThreads {
     }
 
     private void multiplyMatrices(int[] m1, int[] m2, Matrix target) {
-        final int BATCH_SIZE = matrixDimension / (threadPoolSize/2);
-
         for (int row = 0; row < matrixDimension; row++) {
             int[] m1Row = getRow(m1, row);
             
