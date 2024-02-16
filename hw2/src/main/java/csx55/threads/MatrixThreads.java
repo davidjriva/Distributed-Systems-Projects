@@ -44,35 +44,6 @@ public class MatrixThreads {
 
         Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
     */
-    private void multiplyMatricesFast(int[] m1, int[] m2, Matrix target) {
-        int[][] m1_submatrices = splitMatrix(m1);
-        int[][] m2_submatrices = splitMatrix(m2);
-
-        System.out.println(Arrays.deepToString(m1_submatrices));
-        System.out.println("\n\n\n");
-        System.out.println(Arrays.deepToString(m2_submatrices));
-    }
-
-    public int[][] splitMatrix(int[] matrix) {
-        // Calculate the size of each submatrix
-        final int BATCH_SIZE = matrixDimension / threadPoolSize;
-
-        // Iterate through the original matrix and create submatrices
-        int[][] submatrices = new int[threadPoolSize][BATCH_SIZE * matrixDimension];
-
-        for (int rowIndex = 0; rowIndex < matrixDimension; rowIndex++) {
-            int submatrixIndex = rowIndex / BATCH_SIZE;
-
-            int[] rowValues = getRow(matrix, rowIndex);
-
-            // Copy the rowValues to the submatrix at the correct index
-            int submatrixRow = rowIndex % BATCH_SIZE;
-            System.arraycopy(rowValues, 0, submatrices[submatrixIndex], submatrixRow * matrixDimension, matrixDimension);
-        }
-
-        return submatrices;
-    }
-
     private void multiplyMatrices(int[] m1, int[] m2, Matrix target) {
         for (int row = 0; row < matrixDimension; row++) {
             int[] m1Row = getRow(m1, row);
@@ -180,12 +151,6 @@ public class MatrixThreads {
         System.out.printf("Sum of the elements in input matrix B = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.B));
         System.out.printf("Sum of the elements in input matrix C = %d\n", matrixThreads.sumElementsInMatrix(matrixThreads.C));
         System.out.printf("Sum of the elements in input matrix D = %d\n\n", matrixThreads.sumElementsInMatrix(matrixThreads.D));
-
-        System.out.println(matrixThreads.A);
-        System.out.println("\n");
-        System.out.println(matrixThreads.B);
-        System.out.println("\n");
-        matrixThreads.multiplyMatricesFast(matrixThreads.A.getValues(), matrixThreads.B.getValues(), matrixThreads.X);
 
         double XCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.A, matrixThreads.B, matrixThreads.X, "X");
         System.out.printf("Time to compute matrix X is: %.3fs\n\n", XCalculationTimer);

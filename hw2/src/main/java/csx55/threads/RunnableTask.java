@@ -6,7 +6,6 @@ public class RunnableTask implements Runnable{
     private Thread thread;
     private final BlockingQueue<Runnable> taskQueue;
     private boolean isRunning;
-    private Matrix X,Y;
 
     public RunnableTask(BlockingQueue<Runnable> taskQueue) {
         this.taskQueue = taskQueue;
