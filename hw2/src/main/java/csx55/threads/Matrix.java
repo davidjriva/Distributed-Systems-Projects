@@ -44,6 +44,23 @@ public class Matrix {
         values[location] = value;
     }
 
+    /*  
+    [1,2,3]     [1,4,7]
+    [4,5,6] ->  [2,5,6]
+    [7,8,9]     [3,6,9]
+    
+    [1,2,3,4,5,6,7,8,9]
+    */
+    public void toColumnWiseArray() {
+        int[] tmp = Arrays.copyOf(values, values.length);
+
+        for (int col = 0; col < dimensionality; col++) {
+            for (int row = 0; row < dimensionality; row++) {
+                values[row * dimensionality + col] = tmp[col * dimensionality + row];
+            }
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();

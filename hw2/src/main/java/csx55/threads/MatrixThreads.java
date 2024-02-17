@@ -2,7 +2,7 @@ package csx55.threads;
 
 import java.util.Random;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,13 +13,14 @@ public class MatrixThreads {
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
     private ThreadPool threadPool;
-    private CountDownLatch latch;
+    private AtomicInteger itemsProcessed;
 
     public MatrixThreads(int threadPoolSize, int matrixDimension, int seed) {
         this.threadPoolSize = threadPoolSize;
         this.matrixDimension = matrixDimension;
         this.seed = seed;
         this.rand = new Random(seed);
+        this.itemsProcessed = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
     private void initializeMatrices() {
@@ -45,11 +46,17 @@ public class MatrixThreads {
         Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
     */
     private void multiplyMatrices(int[] m1, int[] m2, Matrix target) {
+        // long startTime, endTime;
         for (int row = 0; row < matrixDimension; row++) {
+            //startTime = System.nanoTime();
             int[] m1Row = getRow(m1, row);
-            
+            //endTime = System.nanoTime();
+            //System.out.println("Row time= " + (endTime-startTime));
             for (int col = 0; col < matrixDimension; col++) {
+                //startTime = System.nanoTime();
                 int[] m2Col = getColumn(m2, col);
+                //endTime = System.nanoTime();
+                //System.out.println("Col time= " + (endTime - startTime));
                 
                 final int[] currRow = m1Row;
                 final int[] currCol = m2Col;
@@ -63,7 +70,7 @@ public class MatrixThreads {
                         res += currRow[i] * currCol[i];
                     }
                     target.setCell(targetRow, targetCol, res);
-                    latch.countDown();
+                    itemsProcessed.getAndDecrement();
                 });
             }  
         }
@@ -75,31 +82,22 @@ public class MatrixThreads {
     }
 
     private int[] getColumn(int[] values, int colIndex) {
-        int[] column = new int[matrixDimension];
-
-        for (int row = 0; row < matrixDimension; row++) {
-            int offSet = row * matrixDimension;
-            int location = offSet + colIndex;
-            column[row] = values[location];
-        }
-        return column;
+       int offSet = matrixDimension * colIndex;
+       return Arrays.copyOfRange(values, offSet, offSet + matrixDimension);
     }
 
     private void initializeThreadPool() {
-        int poolCapacity = 2500 * threadPoolSize;
+        int poolCapacity = 200 * threadPoolSize;
         threadPool = new ThreadPool(threadPoolSize, poolCapacity);
     }
 
-    private void initializeLatch() {
-        latch = new CountDownLatch(matrixDimension * matrixDimension);
+    private void initializeItemsProcessed() {
+        itemsProcessed = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
     private void displayMatrixAfterCountDown(Matrix matrix, String matrixName) {
-        try{
-            latch.await();
-        } catch (InterruptedException ie) {
-            System.err.println("MatrixThreads.java " + ie.getMessage());
-        }
+        // Busy wait for all items to be processed
+        while (itemsProcessed.get() != 0) { }
 
         System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
@@ -112,15 +110,14 @@ public class MatrixThreads {
     }
 
     private double multiplyMatricesAndTime(Matrix m1, Matrix m2, Matrix target, String targetName) {
-        long startTime, endTime;
+        //Reset item processed count
+        initializeItemsProcessed();
 
-        //Reset latch
-        initializeLatch();
-
-        startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
+        m2.toColumnWiseArray();
         multiplyMatrices(m1.getValues(), m2.getValues(), target);
         displayMatrixAfterCountDown(target, targetName);
-        endTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
 
         return ((endTime - startTime) / 1000.0);
     }
