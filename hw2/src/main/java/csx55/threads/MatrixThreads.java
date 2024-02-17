@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.File;
 
 public class MatrixThreads {
-    private final int BATCH_SIZE = 500; // batch size for matrix multiplication
-
     private final int threadPoolSize, matrixDimension, seed;
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
