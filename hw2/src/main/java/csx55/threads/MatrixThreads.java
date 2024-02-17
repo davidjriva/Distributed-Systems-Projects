@@ -49,7 +49,6 @@ public class MatrixThreads {
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
         for (int row = 0; row < matrixDimension; ++row) {
-            
             final int targetRow = row;
             final int[] m1Row = getRow(m1, targetRow);
             
