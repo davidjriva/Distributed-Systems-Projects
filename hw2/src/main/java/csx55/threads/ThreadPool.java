@@ -30,7 +30,7 @@ public class ThreadPool {
     }
 
     // Place an item into the queue, waits for space if queue is full
-    public void addTask(Runnable task) {
+    public void addTask(final Runnable task) {
         taskQueue.add(task);
         queueSize.getAndIncrement();
     }

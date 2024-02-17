@@ -45,23 +45,17 @@ public class MatrixThreads {
 
         Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
     */
-    private void multiplyMatrices(int[] m1, int[] m2, Matrix target) {
+    private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
         for (int row = 0; row < matrixDimension; row++) {
-            int[] m1Row = getRow(m1, row);
+            final int targetRow = row;
+            final int[] m1Row = getRow(m1, targetRow);
+            
             for (int col = 0; col < matrixDimension; col++) {
-                int[] m2Col = getColumn(m2, col);
-                
-                final int[] currRow = m1Row;
-                final int[] currCol = m2Col;
-
-                // Write to the matrix at this reference
-                final int targetRow = row;
                 final int targetCol = col;
+                final int[] m2Col = getColumn(m2, targetCol);
+                
                 threadPool.addTask( () -> {
-                    int res = 0;
-                    for (int i = 0; i < currRow.length; i++) {
-                        res += currRow[i] * currCol[i];
-                    }
+                    int res = calculateDotProduct(m1Row, m2Col);
                     target.setCell(targetRow, targetCol, res);
                     itemsProcessed.getAndDecrement();
                 });
@@ -69,12 +63,20 @@ public class MatrixThreads {
         }
     }
 
-    private int[] getRow(int[] values, int rowIndex) {
+    private int calculateDotProduct(final int[] v1, final int[] v2) {
+        int res = 0;
+        for (int i = 0; i < v1.length; i++) {
+            res += v1[i] * v2[i];
+        }
+        return res;
+    }
+
+    private int[] getRow(final int[] values, final int rowIndex) {
         int offSet = matrixDimension * rowIndex;
         return Arrays.copyOfRange(values, offSet, offSet + matrixDimension);
     }
 
-    private int[] getColumn(int[] values, int colIndex) {
+    private int[] getColumn(final int[] values, final int colIndex) {
        int offSet = matrixDimension * colIndex;
        return Arrays.copyOfRange(values, offSet, offSet + matrixDimension);
     }
@@ -88,7 +90,7 @@ public class MatrixThreads {
         itemsProcessed = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
-    private void displayMatrixAfterCountDown(Matrix matrix, String matrixName) {
+    private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
         // Busy wait for all items to be processed
         while (itemsProcessed.get() != 0) { }
 
@@ -96,13 +98,13 @@ public class MatrixThreads {
     }
 
 
-    private long sumElementsInMatrix(Matrix m1) {
+    private long sumElementsInMatrix(final Matrix m1) {
         int[] values = m1.getValues();
         // convert to stream, flatten stream, calculate sum
         return Arrays.stream(values).parallel().asLongStream().sum();
     }
 
-    private double multiplyMatricesAndTime(Matrix m1, Matrix m2, Matrix target, String targetName) {
+    private double multiplyMatricesAndTime(final Matrix m1, final Matrix m2, final Matrix target, final String targetName) {
         //Reset item processed count
         initializeItemsProcessed();
 
@@ -110,13 +112,14 @@ public class MatrixThreads {
         long startTime = System.currentTimeMillis();
         m2.toColumnWiseArray();
         multiplyMatrices(m1.getValues(), m2.getValues(), target);
-        displayMatrixAfterCountDown(target, targetName);
         long endTime = System.currentTimeMillis();
+
+        displayMatrixAfterCountDown(target, targetName);
 
         return ((endTime - startTime) / 1000.0);
     }
 
-    private static void writeMatrixToFile(Matrix matrix, String fileName) {
+    private static void writeMatrixToFile(final Matrix matrix, final String fileName) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
             writer.write(matrix.toString());
         } catch (IOException e) {
