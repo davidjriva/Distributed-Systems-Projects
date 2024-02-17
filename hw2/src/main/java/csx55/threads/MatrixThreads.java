@@ -51,17 +51,15 @@ public class MatrixThreads {
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
             final int[] m1Row = getRow(m1, targetRow);
-            
-            for (int col = 0; col < matrixDimension; ++col) {
-                final int targetCol = col;
-                final int[] m2Col = getColumn(m2, targetCol);
-                
-                threadPool.addTask( () -> {
+
+            threadPool.addTask( () -> {
+                for (int col = 0; col < matrixDimension; ++col) {
+                    int[] m2Col = getColumn(m2, col);
                     int res = calculateDotProduct(m1Row, m2Col);
-                    target.setCell(targetRow, targetCol, res);
+                    target.setCell(targetRow, col, res);
                     itemsProcessed.getAndDecrement();
-                });
-            }  
+                }
+            });
         }
     }
 
@@ -106,9 +104,8 @@ public class MatrixThreads {
         long startTime = System.currentTimeMillis();
         m2.toColumnWiseArray();
         multiplyMatrices(m1.getValues(), m2.getValues(), target);
-        long endTime = System.currentTimeMillis();
-
         displayMatrixAfterCountDown(target, targetName);
+        long endTime = System.currentTimeMillis();
 
         return ((endTime - startTime) / 1000.0);
     }
