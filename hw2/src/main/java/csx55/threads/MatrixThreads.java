@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.File;
 
 public class MatrixThreads {
+    private final int BATCH_SIZE = 500; // batch size for matrix multiplication
+
     private final int threadPoolSize, matrixDimension, seed;
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
@@ -47,6 +49,7 @@ public class MatrixThreads {
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
         for (int row = 0; row < matrixDimension; row++) {
+            
             final int targetRow = row;
             final int[] m1Row = getRow(m1, targetRow);
             
@@ -90,14 +93,6 @@ public class MatrixThreads {
         itemsProcessed = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
-    private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
-        // Busy wait for all items to be processed
-        while (itemsProcessed.get() != 0) { }
-
-        System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
-    }
-
-
     private long sumElementsInMatrix(final Matrix m1) {
         int[] values = m1.getValues();
         // convert to stream, flatten stream, calculate sum
@@ -117,6 +112,13 @@ public class MatrixThreads {
         displayMatrixAfterCountDown(target, targetName);
 
         return ((endTime - startTime) / 1000.0);
+    }
+
+    private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
+        // Busy wait for all items to be processed
+        while (itemsProcessed.get() != 0) { }
+
+        System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
 
     private static void writeMatrixToFile(final Matrix matrix, final String fileName) {
