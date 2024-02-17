@@ -24,7 +24,7 @@ public class RunnableTask implements Runnable{
         while (isRunning) {
             if(queueSize.get() > 0) {
                 if(queueSize.decrementAndGet() >= 0) {
-                    Runnable runnable = (Runnable) taskQueue.poll();
+                    Runnable runnable = taskQueue.poll();
                     runnable.run();
                 } else {
                     queueSize.getAndIncrement();
