@@ -3,6 +3,7 @@ package csx55.threads;
 import java.util.Random;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CountDownLatch;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,14 +16,14 @@ public class MatrixThreads {
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
     private ThreadPool threadPool;
-    private AtomicInteger itemsProcessed;
+    private CountDownLatch latch;
 
     public MatrixThreads(int threadPoolSize, int matrixDimension, int seed) {
         this.threadPoolSize = threadPoolSize;
         this.matrixDimension = matrixDimension;
         this.seed = seed;
         this.rand = new Random(seed);
-        this.itemsProcessed = new AtomicInteger(matrixDimension * matrixDimension);
+        this.latch = new CountDownLatch(matrixDimension * matrixDimension);
     }
 
     private void initializeMatrices() {
@@ -57,7 +58,7 @@ public class MatrixThreads {
                     int[] m2Col = getColumn(m2, col);
                     int res = calculateDotProduct(m1Row, m2Col);
                     target.setCell(targetRow, col, res);
-                    itemsProcessed.getAndDecrement();
+                    latch.countDown();
                 }
             });
         }
@@ -87,7 +88,7 @@ public class MatrixThreads {
     }
 
     private void initializeItemsProcessed() {
-        itemsProcessed = new AtomicInteger(matrixDimension * matrixDimension);
+        latch = new CountDownLatch(matrixDimension * matrixDimension);
     }
 
     private long sumElementsInMatrix(final Matrix m1) {
@@ -112,7 +113,11 @@ public class MatrixThreads {
 
     private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
         // Busy wait for all items to be processed
-        while (itemsProcessed.get() != 0) { }
+        try{
+            latch.await();
+        } catch (Exception e) {
+            
+        }
 
         System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
