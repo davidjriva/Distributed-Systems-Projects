@@ -47,6 +47,9 @@ public class MatrixThreads {
         C(i,j) = Summation[A(i,k)*B(k,j)]
 
         Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
+        
+        model name      : 12th Gen Intel(R) Core(TM) i7-12700K
+        cache size      : 25600 KB
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
         for (int row = 0; row < matrixDimension; ++row) {
@@ -73,13 +76,25 @@ public class MatrixThreads {
     }
 
     private int[] getRow(final int[] values, final int rowIndex) {
-        int offSet = matrixDimension * rowIndex;
-        return Arrays.copyOfRange(values, offSet, offSet + matrixDimension);
+        int[] row = new int[matrixDimension];
+        int offset = matrixDimension * rowIndex;
+
+        for (int i = 0; i < matrixDimension; i++) {
+            row[i] = values[offset + i];
+        }
+
+        return row;
     }
 
     private int[] getColumn(final int[] values, final int colIndex) {
-       int offSet = matrixDimension * colIndex;
-       return Arrays.copyOfRange(values, offSet, offSet + matrixDimension);
+        int[] column = new int[matrixDimension];
+        int offset = matrixDimension * colIndex;
+
+        for (int i = 0; i < matrixDimension; i++) {
+            column[i] = values[offset + i];
+        }
+
+        return column;
     }
 
     private void initializeThreadPool() {

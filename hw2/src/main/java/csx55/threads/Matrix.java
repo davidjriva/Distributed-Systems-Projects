@@ -41,7 +41,7 @@ public class Matrix {
     public void setCell(final int rowIndex, final int colIndex, final int value) {
         int offSet = rowIndex * dimensionality;
         int location = offSet + colIndex;
-        values[rowIndex * dimensionality + colIndex] = value;
+        values[location] = value;
     }
 
     public void toColumnWiseArray() {
