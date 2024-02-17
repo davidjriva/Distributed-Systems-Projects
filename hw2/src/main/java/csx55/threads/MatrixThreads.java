@@ -54,11 +54,11 @@ public class MatrixThreads {
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
-            final int[] m1Row = getRow(m1, targetRow);
+            final int[] m1Row = getRowOrCol(m1, targetRow);
 
             threadPool.addTask( () -> {
                 for (int col = 0; col < matrixDimension; ++col) {
-                    int[] m2Col = getColumn(m2, col);
+                    int[] m2Col = getRowOrCol(m2, col);
                     int res = calculateDotProduct(m1Row, m2Col);
                     target.setCell(targetRow, col, res);
                     latch.countDown();
@@ -75,26 +75,16 @@ public class MatrixThreads {
         return res;
     }
 
-    private int[] getRow(final int[] values, final int rowIndex) {
+    // Matrix is stored col-major format when this is called so the rows represent the columns of the original matrix.
+    private int[] getRowOrCol(final int[] values, final int rowOrColIndex) {
         int[] row = new int[matrixDimension];
-        int offset = matrixDimension * rowIndex;
+        int offset = matrixDimension * rowOrColIndex;
 
         for (int i = 0; i < matrixDimension; i++) {
             row[i] = values[offset + i];
         }
 
         return row;
-    }
-
-    private int[] getColumn(final int[] values, final int colIndex) {
-        int[] column = new int[matrixDimension];
-        int offset = matrixDimension * colIndex;
-
-        for (int i = 0; i < matrixDimension; i++) {
-            column[i] = values[offset + i];
-        }
-
-        return column;
     }
 
     private void initializeThreadPool() {
