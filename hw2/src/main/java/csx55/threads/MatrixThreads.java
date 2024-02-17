@@ -46,17 +46,10 @@ public class MatrixThreads {
         Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
     */
     private void multiplyMatrices(int[] m1, int[] m2, Matrix target) {
-        // long startTime, endTime;
         for (int row = 0; row < matrixDimension; row++) {
-            //startTime = System.nanoTime();
             int[] m1Row = getRow(m1, row);
-            //endTime = System.nanoTime();
-            //System.out.println("Row time= " + (endTime-startTime));
             for (int col = 0; col < matrixDimension; col++) {
-                //startTime = System.nanoTime();
                 int[] m2Col = getColumn(m2, col);
-                //endTime = System.nanoTime();
-                //System.out.println("Col time= " + (endTime - startTime));
                 
                 final int[] currRow = m1Row;
                 final int[] currCol = m2Col;
@@ -113,6 +106,7 @@ public class MatrixThreads {
         //Reset item processed count
         initializeItemsProcessed();
 
+        // Perform the multiplication calculation
         long startTime = System.currentTimeMillis();
         m2.toColumnWiseArray();
         multiplyMatrices(m1.getValues(), m2.getValues(), target);
