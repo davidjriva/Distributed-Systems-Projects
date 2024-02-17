@@ -48,12 +48,12 @@ public class MatrixThreads {
         Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
-        for (int row = 0; row < matrixDimension; row++) {
+        for (int row = 0; row < matrixDimension; ++row) {
             
             final int targetRow = row;
             final int[] m1Row = getRow(m1, targetRow);
             
-            for (int col = 0; col < matrixDimension; col++) {
+            for (int col = 0; col < matrixDimension; ++col) {
                 final int targetCol = col;
                 final int[] m2Col = getColumn(m2, targetCol);
                 
@@ -68,7 +68,7 @@ public class MatrixThreads {
 
     private int calculateDotProduct(final int[] v1, final int[] v2) {
         int res = 0;
-        for (int i = 0; i < v1.length; i++) {
+        for (int i = 0; i < v1.length; ++i) {
             res += v1[i] * v2[i];
         }
         return res;

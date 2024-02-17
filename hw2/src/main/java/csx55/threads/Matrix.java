@@ -25,9 +25,9 @@ public class Matrix {
         int upperBound = 1000;
         int lowerBound = -1000;
 
-        for (int row = 0; row < dimensionality; row++){
+        for (int row = 0; row < dimensionality; ++row){
             int offSet = row * dimensionality;
-            for (int col = 0; col < dimensionality; col++) {
+            for (int col = 0; col < dimensionality; ++col) {
                 int location = offSet + col;
                 values[location] = upperBound - rand.nextInt(upperBound - lowerBound);
             }
@@ -47,8 +47,8 @@ public class Matrix {
     public void toColumnWiseArray() {
         int[] tmp = Arrays.copyOf(values, values.length);
 
-        for (int col = 0; col < dimensionality; col++) {
-            for (int row = 0; row < dimensionality; row++) {
+        for (int col = 0; col < dimensionality; ++col) {
+            for (int row = 0; row < dimensionality; ++row) {
                 values[row * dimensionality + col] = tmp[col * dimensionality + row];
             }
         }
