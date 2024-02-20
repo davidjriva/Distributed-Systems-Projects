@@ -52,6 +52,15 @@ public class MatrixThreads {
         cache size      : 25600 KB
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
+        Map<String, int[]> memoizedCols = new HashMap<>();
+
+        // Loop through and memoize all the cols for O(1) lookup later
+        for (int col = 0; col < matrixDimension; ++col) {
+            String key = "" + col;
+            memoizedCols.put(key, getRowOrCol(m2, col));
+        }   
+
+        final Map<String, int[]> colMap = new HashMap<>(memoizedCols);
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
             final int[] m1Row = getRowOrCol(m1, targetRow);
@@ -59,7 +68,8 @@ public class MatrixThreads {
 
             threadPool.addTask( () -> {
                 for (int col = 0; col < matrixDimension; ++col) {
-                    int[] m2Col = getRowOrCol(m2, col);
+                    String key = "" + col;
+                    int[] m2Col = colMap.get(key);
                     int res = calculateDotProduct(m1Row, m2Col);
                     target.setCell(targetRow, col, res, offSet);
                     latch.countDown();
