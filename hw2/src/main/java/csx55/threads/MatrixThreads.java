@@ -2,6 +2,8 @@ package csx55.threads;
 
 import java.util.Random;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.CountDownLatch;
 import java.io.BufferedWriter;
@@ -50,15 +52,19 @@ public class MatrixThreads {
         cache size      : 25600 KB
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
+        Map<String, int[]> memoizedCols = new HashMap<>();
+
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
             final int[] m1Row = getRowOrCol(m1, targetRow);
+            final int offSet = row * matrixDimension;
+
 
             threadPool.addTask( () -> {
                 for (int col = 0; col < matrixDimension; ++col) {
                     int[] m2Col = getRowOrCol(m2, col);
                     int res = calculateDotProduct(m1Row, m2Col);
-                    target.setCell(targetRow, col, res);
+                    target.setCell(targetRow, col, res, offSet);
                     latch.countDown();
                 }
             });

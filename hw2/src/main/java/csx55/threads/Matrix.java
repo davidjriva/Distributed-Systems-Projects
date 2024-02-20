@@ -38,8 +38,7 @@ public class Matrix {
         return values;
     }
 
-    public void setCell(final int rowIndex, final int colIndex, final int value) {
-        int offSet = rowIndex * dimensionality;
+    public void setCell(final int rowIndex, final int colIndex, final int value, final int offSet) {
         int location = offSet + colIndex;
         values[location] = value;
     }
