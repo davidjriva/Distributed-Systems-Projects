@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.CountDownLatch;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,14 +15,14 @@ public class MatrixThreads {
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
     private ThreadPool threadPool;
-    private CountDownLatch latch;
+    private AtomicInteger operationsLeft;
 
     public MatrixThreads(int threadPoolSize, int matrixDimension, int seed) {
         this.threadPoolSize = threadPoolSize;
         this.matrixDimension = matrixDimension;
         this.seed = seed;
         this.rand = new Random(seed);
-        this.latch = new CountDownLatch(matrixDimension * matrixDimension);
+        this.operationsLeft = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
     private void initializeMatrices() {
@@ -59,6 +58,7 @@ public class MatrixThreads {
             memoizedCols[col] = getRowOrCol(m2, col);
         }   
 
+        final int operationDelta = -1 * matrixDimension;
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
             final int[] m1Row = getRowOrCol(m1, targetRow);
@@ -68,8 +68,8 @@ public class MatrixThreads {
                 for (int col = 0; col < matrixDimension; ++col) {
                     int res = calculateDotProduct(m1Row, memoizedCols[col]);
                     target.setCell(targetRow, col, res, offSet);
-                    latch.countDown();
                 }
+                operationsLeft.addAndGet(operationDelta);
             });
         }
     }
@@ -100,7 +100,7 @@ public class MatrixThreads {
     }
 
     private void initializeItemsProcessed() {
-        latch = new CountDownLatch(matrixDimension * matrixDimension);
+        operationsLeft = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
     private long sumElementsInMatrix(final Matrix m1) {
@@ -125,11 +125,7 @@ public class MatrixThreads {
 
     private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
         // Busy wait for all items to be processed
-        try{
-            latch.await();
-        } catch (Exception e) {
-            
-        }
+        while (operationsLeft.get() != 0) {}
 
         System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
