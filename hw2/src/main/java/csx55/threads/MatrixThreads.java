@@ -52,13 +52,10 @@ public class MatrixThreads {
         cache size      : 25600 KB
     */
     private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
-        Map<String, int[]> memoizedCols = new HashMap<>();
-
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
             final int[] m1Row = getRowOrCol(m1, targetRow);
             final int offSet = row * matrixDimension;
-
 
             threadPool.addTask( () -> {
                 for (int col = 0; col < matrixDimension; ++col) {
