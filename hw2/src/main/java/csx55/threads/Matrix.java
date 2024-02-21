@@ -55,10 +55,10 @@ public class Matrix {
     public void toColumnWiseArray() {
         twoDValues = new int[dimensionality][dimensionality];
 
-        for (int col = 0; col < dimensionality; ++col) {
-            for (int row = 0; row < dimensionality; ++row) {
-                twoDValues[row][col] = values[col * dimensionality + row];
-            }
+        for (int i = 0; i < dimensionality; ++i) {
+            int row = i % dimensionality;
+            int col = i / dimensionality;
+            twoDValues[row][col] = values[i];
         }
     }
 
