@@ -8,6 +8,7 @@ public class Matrix {
     private final int dimensionality;
     private final Random rand;
     private int[] values;
+    private int[][] twoDValues;
     
     public Matrix(int dimensionality){
         this.values = new int[dimensionality*dimensionality];
@@ -38,6 +39,10 @@ public class Matrix {
         return values;
     }
 
+    public int[][] getTwoDValues() {
+        return twoDValues;
+    }
+
     public void setCell(final int rowIndex, final int colIndex, final int value, final int offSet) {
         int location = offSet + colIndex;
         values[location] = value;
@@ -48,11 +53,11 @@ public class Matrix {
     }
 
     public void toColumnWiseArray() {
-        int[] tmp = Arrays.copyOf(values, values.length);
+        twoDValues = new int[dimensionality][dimensionality];
 
         for (int col = 0; col < dimensionality; ++col) {
             for (int row = 0; row < dimensionality; ++row) {
-                values[row * dimensionality + col] = tmp[col * dimensionality + row];
+                twoDValues[row][col] = values[col * dimensionality + row];
             }
         }
     }

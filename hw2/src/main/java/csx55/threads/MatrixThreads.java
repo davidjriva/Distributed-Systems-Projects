@@ -51,14 +51,7 @@ public class MatrixThreads {
         model name      : 12th Gen Intel(R) Core(TM) i7-12700K
         cache size      : 25600 KB
     */
-    private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
-        final int[][] memoizedCols = new int[matrixDimension][matrixDimension];
-        
-        // Loop through and memoize all the cols for O(1) lookup later
-        for (int col = 0; col < matrixDimension; ++col) {
-            memoizedCols[col] = getRowOrCol(m2, col);
-        }   
-
+    private void multiplyMatrices(final int[] m1, final int[][] m2, final Matrix target) {
         final int operationDelta = -1 * matrixDimension;
         for (int row = 0; row < matrixDimension; ++row) {
             final int targetRow = row;
@@ -68,7 +61,7 @@ public class MatrixThreads {
             threadPool.addTask( () -> {
                 int[] res = new int[matrixDimension];
                 for (int col = 0; col < matrixDimension; ++col) {
-                    res[col] = calculateDotProduct(m1Row, memoizedCols[col]);
+                    res[col] = calculateDotProduct(m1Row, m2[col]);
                 }
                 target.setRow(res, offSet);
                 operationsLeft.addAndGet(operationDelta);
@@ -118,7 +111,7 @@ public class MatrixThreads {
         // Perform the multiplication calculation
         long startTime = System.currentTimeMillis();
         m2.toColumnWiseArray();
-        multiplyMatrices(m1.getValues(), m2.getValues(), target);
+        multiplyMatrices(m1.getValues(), m2.getTwoDValues(), target);
         displayMatrixAfterCountDown(target, targetName);
         long endTime = System.currentTimeMillis();
 
