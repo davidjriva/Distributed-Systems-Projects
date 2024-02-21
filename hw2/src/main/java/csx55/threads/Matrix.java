@@ -43,6 +43,10 @@ public class Matrix {
         values[location] = value;
     }
 
+    public void setRow(final int[] row, final int offSet) {
+        System.arraycopy(row, 0, values, offSet, dimensionality);
+    }
+
     public void toColumnWiseArray() {
         int[] tmp = Arrays.copyOf(values, values.length);
 

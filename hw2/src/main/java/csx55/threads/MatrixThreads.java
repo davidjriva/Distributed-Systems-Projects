@@ -51,8 +51,7 @@ public class MatrixThreads {
         model name      : 12th Gen Intel(R) Core(TM) i7-12700K
         cache size      : 25600 KB
     */
-    private long multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
-        AtomicLong sum = new AtomicLong(0);
+    private void multiplyMatrices(final int[] m1, final int[] m2, final Matrix target) {
         final int[][] memoizedCols = new int[matrixDimension][matrixDimension];
         
         // Loop through and memoize all the cols for O(1) lookup later
@@ -67,18 +66,14 @@ public class MatrixThreads {
             final int offSet = row * matrixDimension;
 
             threadPool.addTask( () -> {
-                long innerSum = 0;
+                int[] res = new int[matrixDimension];
                 for (int col = 0; col < matrixDimension; ++col) {
-                    int res = calculateDotProduct(m1Row, memoizedCols[col]);
-                    innerSum += res;
-                    target.setCell(targetRow, col, res, offSet);
+                    res[col] = calculateDotProduct(m1Row, memoizedCols[col]);
                 }
+                target.setRow(res, offSet);
                 operationsLeft.addAndGet(operationDelta);
-                sum.addAndGet(innerSum);
             });
         }
-
-        return sum.get();
     }
 
     private int calculateDotProduct(final int[] v1, final int[] v2) {
@@ -123,8 +118,8 @@ public class MatrixThreads {
         // Perform the multiplication calculation
         long startTime = System.currentTimeMillis();
         m2.toColumnWiseArray();
-        long sum = multiplyMatrices(m1.getValues(), m2.getValues(), target);
-        displayMatrixAfterCountDown(target, targetName, sum);
+        multiplyMatrices(m1.getValues(), m2.getValues(), target);
+        displayMatrixAfterCountDown(target, targetName);
         long endTime = System.currentTimeMillis();
 
         return ((endTime - startTime) / 1000.0);
@@ -135,13 +130,6 @@ public class MatrixThreads {
         while (operationsLeft.get() != 0) {}
 
         System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
-    }
-
-    private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName, final long sum) {
-        // Busy wait for all items to be processed
-        while (operationsLeft.get() != 0) {}
-
-        System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sum);
     }
 
     private static void writeMatrixToFile(final Matrix matrix, final String fileName) {
