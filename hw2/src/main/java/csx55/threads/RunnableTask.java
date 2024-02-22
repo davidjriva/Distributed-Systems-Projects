@@ -1,7 +1,5 @@
 package csx55.threads;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
