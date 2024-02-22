@@ -55,7 +55,7 @@ public class Matrix {
     public void toColumnWiseArray() {
         twoDValues = new int[dimensionality][dimensionality];
 
-        for (int i = 0; i < dimensionality; ++i) {
+        for (int i = 0; i < dimensionality * dimensionality; ++i) {
             int row = i % dimensionality;
             int col = i / dimensionality;
             twoDValues[row][col] = values[i];
