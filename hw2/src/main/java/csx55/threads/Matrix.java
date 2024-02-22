@@ -9,20 +9,17 @@ public class Matrix {
     private final Random rand;
     private int[] values;
     private int[][] twoDValues;
-    private String name;
     
-    public Matrix(int dimensionality, String name){
+    public Matrix(int dimensionality){
         this.values = new int[dimensionality*dimensionality];
         this.dimensionality = dimensionality;
         this.rand = new Random();
-        this.name = name;
     }
 
-    public Matrix(int dimensionality, Random rand, String name) {
+    public Matrix(int dimensionality, Random rand) {
         this.values = new int[dimensionality*dimensionality];
         this.dimensionality = dimensionality;
         this.rand = rand;
-        this.name = name;
     }
 
     public void fillMatrix() {
@@ -44,10 +41,6 @@ public class Matrix {
 
     public int[][] getTwoDValues() {
         return twoDValues;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public void setCell(final int rowIndex, final int colIndex, final int value, final int offSet) {
