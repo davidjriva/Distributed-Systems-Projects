@@ -80,11 +80,9 @@ public class MatrixThreads {
     // Matrix is stored col-major format when this is called so the rows represent the columns of the original matrix.
     private int[] getRowOrCol(final int[] values, final int rowOrColIndex) {
         int[] row = new int[matrixDimension];
-        int offset = matrixDimension * rowOrColIndex;
+        int offSet = matrixDimension * rowOrColIndex;
 
-        for (int i = 0; i < matrixDimension; i++) {
-            row[i] = values[offset + i];
-        }
+        System.arraycopy(values, offSet, row, 0, matrixDimension);
 
         return row;
     }
@@ -120,7 +118,7 @@ public class MatrixThreads {
 
     private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
         // Busy wait for all items to be processed
-        while (operationsLeft.get() != 0) {}
+        while (operationsLeft.get() != 0) { }
 
         System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
