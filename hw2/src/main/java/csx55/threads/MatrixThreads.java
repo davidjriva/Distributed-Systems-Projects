@@ -141,7 +141,7 @@ public class MatrixThreads {
         System.out.printf("Dimensionality of the square matrices is: %d\n", matrixDimension);
 
         matrixThreads.initializeThreadPool();
-        System.out.printf("The thread pool size has been initialized to: %d\n", threadPoolSize);
+        System.out.printf("The thread pool size has been initialized to: %d\n\n", threadPoolSize);
 
         matrixThreads.initializeMatrices();
 
