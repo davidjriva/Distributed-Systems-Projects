@@ -22,6 +22,6 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'CustomDriver'
+        attributes 'Main-Class': 'TextFileJoin'
     }
 }

@@ -110,7 +110,7 @@ public class TrackArtistHottnessOverTime {
             double percentChange = ((maxYear_val - minYear_val) / maxYear_val) * 100.0;
 
 
-            if (!Double.isNaN(percentChange) && !Double.isInfinite(percentChange)) {
+            if (percentChange != 0.0 && !Double.isNaN(percentChange) && !Double.isInfinite(percentChange)) {
                 outVal.set(percentChange);
                 context.write(outVal, key);
             }
