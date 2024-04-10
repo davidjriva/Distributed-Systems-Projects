@@ -121,40 +121,51 @@ public class TrackArtistHottnessOverTime {
         Input: <percent change, artist ID>
         Output: Map percent change and artist ID
     */
-    public static class MaxMapper extends Mapper<Object, Text, Text, Text>{
-        private Text placeHolder = new Text("A");
+    public static class MaxMapper extends Mapper<Object, Text, DoubleWritable, Text>{
+        private DoubleWritable outKey = new DoubleWritable();
         private Text outVal = new Text();
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
             String[] items = line.split("\\s+");
 
-            String tmp = "" + items[0] + " " + items[1];
-            outVal.set(tmp);
+            outKey.set(Double.parseDouble(items[0]));
+            outVal.set(items[1]);
 
-            context.write(placeHolder, outVal);
+            context.write(outKey, outVal);
         }
     }
 
-    public static class MaxReducer extends Reducer<Text,Text,Text,Text> {
-        public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            double max_percent = Double.MIN_VALUE;
-            String max_artist = "ERROR";
+    public static class MaxReducer extends Reducer<DoubleWritable,Text,DoubleWritable,Text> {
+        private Text artistVal = new Text();
+        private DoubleWritable percentKey = new DoubleWritable();
 
+        public void reduce(DoubleWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             for (Text value : values) {
-                String[] items = value.toString().split(" ");
-
-                double percent = Double.parseDouble(items[0]);
-                String artist_id = items[1];
-
-                if (percent > max_percent) {
-                    max_percent = percent;
-                    max_artist = artist_id;
-                }
+                context.write(key, value);
             }
-
-            String tmp = "" + max_percent;
-            context.write(new Text(max_artist), new Text(tmp));
         }
     }
+
+    // public static class MaxReducer extends Reducer<Text,Text,Text,Text> {
+    //     public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    //         double max_percent = Double.MIN_VALUE;
+    //         String max_artist = "ERROR";
+
+    //         for (Text value : values) {
+    //             String[] items = value.toString().split(" ");
+
+    //             double percent = Double.parseDouble(items[0]);
+    //             String artist_id = items[1];
+
+    //             if (percent > max_percent) {
+    //                 max_percent = percent;
+    //                 max_artist = artist_id;
+    //             }
+    //         }
+
+    //         String tmp = "" + max_percent;
+    //         context.write(new Text(max_artist), new Text(tmp));
+    //     }
+    // }
 }
