@@ -11,7 +11,7 @@ object ExampleAnalysis {
     
     // Reading in data
     val movies_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/movies.csv")
-    // val tags_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/tags.csv")
+    val tags_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/tags.csv")
     val rating_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/ratings.csv")
 
     // Q1: How many movies were released for every year within the dataset?
