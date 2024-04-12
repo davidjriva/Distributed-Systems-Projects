@@ -12,7 +12,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class TextFileJoin {
-    public static class AnalysisMapper extends Mapper<LongWritable, Text, Text, Text> {
+    public static class AnalysisMapper extends Mapper<LongWritable, Text, Text, Text> { 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             // Split the input record based on the delimiter
             String[] fields = value.toString().split("\\|");

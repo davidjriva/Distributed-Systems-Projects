@@ -6,3 +6,4 @@ build
 
 # Ignore all text files in this directory
 *.txt
+*.csv
