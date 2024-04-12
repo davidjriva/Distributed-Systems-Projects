@@ -5,9 +5,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.{udf, col, split, size, avg, lower, sum, explode}
 
-object ExampleAnalysis {
+object MovieAnalysis {
   def main(args: Array[String]) {
-    val spark = SparkSession.builder.appName("ExampleAnalysis").master("local").getOrCreate()
+    val spark = SparkSession.builder.appName("MovieAnalysis").master("local").getOrCreate()
     
     // Reading in data
     val movies_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/movies.csv")

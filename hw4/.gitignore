@@ -4,6 +4,8 @@
 # Ignore Gradle build output directory
 build
 
+# Ignore data directory
+data
+
 # Ignore all text files in this directory
 *.txt
-*.csv
