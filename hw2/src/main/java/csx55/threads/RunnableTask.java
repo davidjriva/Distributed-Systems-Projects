@@ -1,16 +1,18 @@
 package csx55.threads;
 
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RunnableTask implements Runnable{
     private Thread thread;
-    private final BlockingQueue<Runnable> taskQueue;
+    private final ConcurrentLinkedQueue<Runnable> taskQueue;
     private boolean isRunning;
-    private Matrix X,Y;
+    private AtomicInteger queueSize;
 
-    public RunnableTask(BlockingQueue<Runnable> taskQueue) {
+    public RunnableTask(ConcurrentLinkedQueue<Runnable> taskQueue, AtomicInteger queueSize) {
         this.taskQueue = taskQueue;
         this.isRunning = true;
+        this.queueSize = queueSize;
     }
 
     @Override
@@ -18,11 +20,12 @@ public class RunnableTask implements Runnable{
         this.thread = Thread.currentThread();
 
         while (isRunning) {
-            try{
-                Runnable runnable = (Runnable) taskQueue.take();
-                runnable.run();
-            } catch (InterruptedException ie) {
-                System.err.println(ie.getMessage());
+            if(queueSize.get() > 0) {
+                if(queueSize.decrementAndGet() >= 0) {
+                    taskQueue.poll().run();
+                } else {
+                    queueSize.getAndIncrement();
+                }
             }
         }
     }

@@ -5,21 +5,20 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class Matrix {
-    final int ROWS, COLS;
-    final Random rand;
-    int[][] values;
+    private final int dimensionality;
+    private final Random rand;
+    private int[] values;
+    private int[][] twoDValues;
     
     public Matrix(int dimensionality){
-        this.values = new int[dimensionality][dimensionality];
-        this.ROWS = dimensionality;
-        this.COLS = dimensionality;
+        this.values = new int[dimensionality*dimensionality];
+        this.dimensionality = dimensionality;
         this.rand = new Random();
     }
 
     public Matrix(int dimensionality, Random rand) {
-        this.values = new int[dimensionality][dimensionality];
-        this.ROWS = dimensionality;
-        this.COLS = dimensionality;
+        this.values = new int[dimensionality*dimensionality];
+        this.dimensionality = dimensionality;
         this.rand = rand;
     }
 
@@ -27,23 +26,65 @@ public class Matrix {
         int upperBound = 1000;
         int lowerBound = -1000;
 
-        for (int row = 0; row < ROWS; row++){
-            for (int col = 0; col < COLS; col++) {
-                values[row][col] = rand.nextInt(upperBound - lowerBound) + lowerBound;
+        for (int row = 0; row < dimensionality; ++row){
+            int offSet = row * dimensionality;
+            for (int col = 0; col < dimensionality; ++col) {
+                int location = offSet + col;
+                values[location] = upperBound - rand.nextInt(upperBound - lowerBound);
             }
         }
     }
 
-    public int[][] getValues() {
+    public int[] getValues() {
         return values;
     }
 
-    public void setCell(int rowIndex, int colIndex, int value) {
-        values[rowIndex][colIndex] = value;
+    public int[][] getTwoDValues() {
+        return twoDValues;
+    }
+
+    public void setCell(final int rowIndex, final int colIndex, final int value, final int offSet) {
+        int location = offSet + colIndex;
+        values[location] = value;
+    }
+
+    public void setRow(final int[] row, final int offSet) {
+        System.arraycopy(row, 0, values, offSet, dimensionality);
+    }
+
+    public void toColumnWiseArray() {
+        twoDValues = new int[dimensionality][dimensionality];
+
+        for (int i = 0; i < dimensionality * dimensionality; ++i) {
+            int row = i % dimensionality;
+            int col = i / dimensionality;
+            twoDValues[row][col] = values[i];
+        }
     }
 
     @Override
     public String toString() {
-        return Arrays.deepToString(values);
+        StringBuilder result = new StringBuilder();
+        result.append("[");
+
+        for (int row = 0; row < dimensionality; row++) {
+            int offset = row * dimensionality;
+            result.append("[");
+            for (int col = 0; col < dimensionality; col++) {
+                int location = offset + col;
+                result.append(values[location]);
+                if (col < dimensionality - 1) {
+                    result.append(", ");
+                }
+            }
+            result.append("]");
+            if (row < dimensionality - 1) {
+                result.append(",\n");
+            }
+        }
+
+        result.append("]");
+
+        return result.toString();
     }
 }

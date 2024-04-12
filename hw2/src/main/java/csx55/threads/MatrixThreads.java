@@ -2,22 +2,28 @@ package csx55.threads;
 
 import java.util.Random;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
 
 public class MatrixThreads {
-    private final int ROWS, COLS, threadPoolSize, matrixDimension, seed;
+    private final int threadPoolSize, matrixDimension, seed;
     private final Random rand;
     private Matrix A, B, C, D, X, Y, Z;
     private ThreadPool threadPool;
-    private CountDownLatch latch;
+    private AtomicInteger operationsLeft;
 
     public MatrixThreads(int threadPoolSize, int matrixDimension, int seed) {
         this.threadPoolSize = threadPoolSize;
         this.matrixDimension = matrixDimension;
         this.seed = seed;
         this.rand = new Random(seed);
-        this.ROWS = matrixDimension;
-        this.COLS = matrixDimension;
+        this.operationsLeft = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
     private void initializeMatrices() {
@@ -39,83 +45,90 @@ public class MatrixThreads {
     /*
         A*B = C
         C(i,j) = Summation[A(i,k)*B(k,j)]
+
+        Divides the matrix into [matrixDimension/(threadPoolSize/2)] sub-matrices that the threads then perform calculations on
+        
+        model name      : 12th Gen Intel(R) Core(TM) i7-12700K
+        cache size      : 25600 KB
     */
-    private void multiplyMatrices(int[][] m1, int[][] m2, Matrix target) {
-        for (int row = 0; row < ROWS; row++) {
-            int[] m1Row = getRow(m1, row);
-            
-            for (int col = 0; col < COLS; col++) {
-                int[] m2Col = getColumn(m2, col);
-                
-                final int[] currRow = m1Row;
-                final int[] currCol = m2Col;
+    private void multiplyMatrices(final int[] m1, final int[][] m2, final Matrix target) {
+        final int operationDelta = -1 * matrixDimension;
+        for (int row = 0; row < matrixDimension; ++row) {
+            final int targetRow = row;
+            final int[] m1Row = getRowOrCol(m1, targetRow);
+            final int offSet = row * matrixDimension;
 
-                // Write to the matrix at this reference
-                final int targetRow = row;
-                final int targetCol = col;
-                threadPool.addTask( () -> {
-                    int res = 0;
-                    for (int i = 0; i < currRow.length; i++) {
-                        res += currRow[i] * currCol[i];
-                    }
-                    target.setCell(targetRow, targetCol, res);
-                    latch.countDown();
-                });
-            }  
+            threadPool.addTask( () -> {
+                int[] res = new int[matrixDimension];
+                for (int col = 0; col < matrixDimension; ++col) {
+                    res[col] = calculateDotProduct(m1Row, m2[col]);
+                }
+                target.setRow(res, offSet);
+                operationsLeft.addAndGet(operationDelta);
+            });
         }
     }
 
-    private int[] getRow(int[][] matrix, int rowIndex) {
-        return matrix[rowIndex];
+    private int calculateDotProduct(final int[] v1, final int[] v2) {
+        int res = 0;
+        for (int i = 0; i < v1.length; ++i) {
+            res += v1[i] * v2[i];
+        }
+        return res;
     }
 
-    private int[] getColumn(int[][] matrix, int colIndex) {
-        int[] column = new int[ROWS];
+    // Matrix is stored col-major format when this is called so the rows represent the columns of the original matrix.
+    private int[] getRowOrCol(final int[] values, final int rowOrColIndex) {
+        int[] row = new int[matrixDimension];
+        int offSet = matrixDimension * rowOrColIndex;
 
-        for (int innerRow = 0; innerRow < ROWS; innerRow++) {
-            column[innerRow] = matrix[innerRow][colIndex];
-        }
-        return column;
+        System.arraycopy(values, offSet, row, 0, matrixDimension);
+
+        return row;
     }
 
     private void initializeThreadPool() {
-        int poolCapacity = 2500 * threadPoolSize;
+        int poolCapacity = 200 * threadPoolSize;
         threadPool = new ThreadPool(threadPoolSize, poolCapacity);
     }
 
-    private void initializeLatch() {
-        latch = new CountDownLatch(matrixDimension * matrixDimension);
+    private void initializeItemsProcessed() {
+        operationsLeft = new AtomicInteger(matrixDimension * matrixDimension);
     }
 
-    private void displayMatrixAfterCountDown(Matrix matrix, String matrixName) {
-        try{
-            latch.await();
-        } catch (InterruptedException ie) {
-            System.err.println("MatrixThreads.java " + ie.getMessage());
-        }
+    private long sumElementsInMatrix(final Matrix m1) {
+        int[] values = m1.getValues();
+        // convert to stream, flatten stream, calculate sum
+        return Arrays.stream(values).parallel().asLongStream().sum();
+    }
+
+    private double multiplyMatricesAndTime(final Matrix m1, final Matrix m2, final Matrix target, final String targetName) {
+        //Reset item processed count
+        initializeItemsProcessed();
+
+        // Perform the multiplication calculation
+        long startTime = System.currentTimeMillis();
+        m2.toColumnWiseArray();
+        multiplyMatrices(m1.getValues(), m2.getTwoDValues(), target);
+        displayMatrixAfterCountDown(target, targetName);
+        long endTime = System.currentTimeMillis();
+
+        return ((endTime - startTime) / 1000.0);
+    }
+
+    private void displayMatrixAfterCountDown(final Matrix matrix, final String matrixName) {
+        // Busy wait for all items to be processed
+        while (operationsLeft.get() != 0) { }
 
         System.out.printf("Sum of the elements in input matrix %s = %d\n", matrixName, sumElementsInMatrix(matrix));
     }
 
-
-    private int sumElementsInMatrix(Matrix m1) {
-        int[][] values = m1.getValues();
-        // convert to stream, flatten stream, calculate sum
-        return Arrays.stream(values).flatMapToInt(Arrays::stream).sum();
-    }
-
-    private double multiplyMatricesAndTime(Matrix m1, Matrix m2, Matrix target, String targetName) {
-        long startTime, endTime;
-
-        //Reset latch
-        initializeLatch();
-
-        startTime = System.currentTimeMillis();
-        multiplyMatrices(m1.getValues(), m2.getValues(), target);
-        displayMatrixAfterCountDown(target, targetName);
-        endTime = System.currentTimeMillis();
-
-        return ((endTime - startTime) / 1000.0);
+    private static void writeMatrixToFile(final Matrix matrix, final String fileName) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write(matrix.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
@@ -128,7 +141,7 @@ public class MatrixThreads {
         System.out.printf("Dimensionality of the square matrices is: %d\n", matrixDimension);
 
         matrixThreads.initializeThreadPool();
-        System.out.printf("The thread pool size has been initialized to: %d\n", threadPoolSize);
+        System.out.printf("The thread pool size has been initialized to: %d\n\n", threadPoolSize);
 
         matrixThreads.initializeMatrices();
 
@@ -146,6 +159,8 @@ public class MatrixThreads {
         double ZCalculationTimer = matrixThreads.multiplyMatricesAndTime(matrixThreads.X, matrixThreads.Y, matrixThreads.Z, "Z");
         System.out.printf("Time to compute matrix Z is: %.3fs\n\n", ZCalculationTimer);
 
-        System.out.printf("Time to compute matrices X, Y, and Z using a thread pool of size = <%d> is : %.3fs", threadPoolSize, XCalculationTimer + YCalculationTimer + ZCalculationTimer);
+        System.out.printf("Time to compute matrices X, Y, and Z using a thread pool of size = <%d> is : %.3fs\n", threadPoolSize, XCalculationTimer + YCalculationTimer + ZCalculationTimer);
+
+        matrixThreads.threadPool.stop();
     }
 }

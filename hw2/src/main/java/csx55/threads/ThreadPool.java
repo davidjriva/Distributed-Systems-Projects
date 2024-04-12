@@ -1,20 +1,22 @@
 package csx55.threads;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
 import java.util.ArrayList;
 
 public class ThreadPool {
-    private BlockingQueue<Runnable> taskQueue;
+    private ConcurrentLinkedQueue<Runnable> taskQueue;
     private List<RunnableTask> tasks = new ArrayList<>();
+    private AtomicInteger queueSize;
 
     public ThreadPool(int numThreads, int capacity) {
-        taskQueue = new ArrayBlockingQueue<>(capacity);
+        this.taskQueue = new ConcurrentLinkedQueue<>();
+        this.queueSize = new AtomicInteger(0);
 
         // Setup threads 
         for (int i = 0; i < numThreads; i++) {
-            RunnableTask RunnableTask = new RunnableTask(taskQueue);
+            RunnableTask RunnableTask = new RunnableTask(taskQueue, queueSize);
             tasks.add(RunnableTask);
         }
 
@@ -25,12 +27,9 @@ public class ThreadPool {
     }
 
     // Place an item into the queue, waits for space if queue is full
-    public void addTask(Runnable task) {
-        try{
-            taskQueue.put(task);
-        } catch (InterruptedException ie) {
-            System.err.println("ThreadPool.java: " + ie.getMessage());
-        }
+    public void addTask(final Runnable task) {
+        taskQueue.add(task);
+        queueSize.getAndIncrement();
     }
 
     public synchronized void stop() {
