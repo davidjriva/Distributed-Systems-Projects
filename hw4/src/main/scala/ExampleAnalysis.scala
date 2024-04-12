@@ -14,19 +14,19 @@ object ExampleAnalysis {
     // val tags_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/tags.csv")
     val rating_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/hw4/data/ratings.csv")
 
-    // // Q1: How many movies were released for every year within the dataset?
-    // val extract_year = udf((movieTitle: String) => extractYear(movieTitle))
-    // val moviesWithYear_df = movies_df.withColumn("year", extract_year(col("title")))
-    // val moviesCountByYear = moviesWithYear_df.groupBy("year").count().filter(col("year").isNotNull).orderBy("year")
+    // Q1: How many movies were released for every year within the dataset?
+    val extract_year = udf((movieTitle: String) => extractYear(movieTitle))
+    val moviesWithYear_df = movies_df.withColumn("year", extract_year(col("title")))
+    val moviesCountByYear = moviesWithYear_df.groupBy("year").count().filter(col("year").isNotNull).orderBy("year")
 
-    // moviesCountByYear.show()
+    moviesCountByYear.show()
 
-    // // Q2: What is the average number of genres for movies within this dataset
-    // val avgGenres = movies_df
-    //                     .withColumn("genres_split", split(col("genres"), "\\|"))
-    //                     .withColumn("num_genres", size(col("genres_split")))
-    //                     .agg(avg(col("num_genres")))
-    // avgGenres.show()
+    // Q2: What is the average number of genres for movies within this dataset
+    val avgGenres = movies_df
+                        .withColumn("genres_split", split(col("genres"), "\\|"))
+                        .withColumn("num_genres", size(col("genres_split")))
+                        .agg(avg(col("num_genres")))
+    avgGenres.show()
 
     // Q3: Rank the genres in the order of their ratings? Again, a movie may span multiple genres; such a movie should be counted in all the genres
     val joined_df = movies_df.join(rating_df, Seq("movieId"), "inner")
@@ -40,10 +40,10 @@ object ExampleAnalysis {
 
     joined_df.show()
 
-    // // Q5: How many movies have been tagged as "comedy"
-    // val comedy_ct = tags_df.select("tag").filter(lower(col("tag")).contains("comedy")).count()
+    // Q5: How many movies have been tagged as "comedy"
+    val comedy_ct = tags_df.select("tag").filter(lower(col("tag")).contains("comedy")).count()
 
-    // println(s"Comedy Count: $comedy_ct")
+    println(s"Comedy Count: $comedy_ct")
 
     spark.stop()
   }
