@@ -62,8 +62,12 @@ object TermProjectTest {
                                     .join(gbPrefixed_df, Seq("foreign_key"))
                                     .join(usPrefixed_df, Seq("foreign_key"))
                                     .select("categoryTitle", "week_year", "ca_percent_change", "gb_percent_change", "us_percent_change") // drop unnecessary cols
-
     joined_week_df.show()
+
+    // Extract volatile trends for all three locs
+    sortPercentChangesAndSave(joined_week_df, "ca_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_ca_percent_data")
+    sortPercentChangesAndSave(joined_week_df, "gb_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_gb_percent_data")
+    sortPercentChangesAndSave(joined_week_df, "us_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_us_percent_data")
 
     spark.stop()
   }
@@ -102,6 +106,17 @@ object TermProjectTest {
                     .orderBy(desc("percent_change"))
 
     percentChange_df
+  }
+
+  def sortPercentChangesAndSave(joined_week_df: DataFrame, percentName: String, savePath: String) : Unit = {
+    val doubleName = percentName + "_double"
+    val sorted_p_change_df = joined_week_df
+      .select("categoryTitle", "week_year", percentName)
+      .withColumn(doubleName, col(percentName).cast("Double"))
+      .drop(percentName)
+      .orderBy(desc(doubleName))
+
+    saveDataFrameAsCSV(sorted_p_change_df, savePath)
   }
 
   def saveDataFrameAsCSV(df: DataFrame, outputPath: String): Unit = {
