@@ -1,0 +1,12 @@
+# Ignore Gradle build dir
+.gradle
+
+# Ignore data dir
+data
+
+# Ignore build artifacts
+build
+
+# Ignore large distribution files
+Term-Project/build/distributions/Term-Project.tar
+Term-Project/build/distributions/Term-Project.zip
