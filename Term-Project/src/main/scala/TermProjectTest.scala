@@ -12,69 +12,54 @@ object TermProjectTest {
     val spark = SparkSession.builder.appName("TermProjectTest").master("local").getOrCreate()
 
     // Reading in Canada data (CA):
-    // val ca_trends_path = "/s/bach/l/under/driva/csx55/Term-Project/data/CA_youtube_trending_data.csv"
-    // val ca_category_path = "/s/bach/l/under/driva/csx55/Term-Project/data/CA_category_id.csv"
-    // val ca_joined_df = readAndJoinTrendsAndCategory(spark, ca_trends_path, ca_category_path)
-
+    // val ca_joined_df = readAndJoinTrendsAndCategory(spark, "CA")
     // val ca_views_week_df = aggregateViewsPerWeek(ca_joined_df)
     // saveDataFrameAsCSV(ca_views_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/CA_week_data")
 
     // Reading in Great Britain Data (GB):
-    // val gb_trends_path = "/s/bach/l/under/driva/csx55/Term-Project/data/GB_youtube_trending_data.csv"
-    // val gb_category_path = "/s/bach/l/under/driva/csx55/Term-Project/data/GB_category_id.csv"
-    // val gb_joined_df = readAndJoinTrendsAndCategory(spark, gb_trends_path, gb_category_path)
-
+    // val gb_joined_df = readAndJoinTrendsAndCategory(spark, "GB")
     // val gb_views_week_df = aggregateViewsPerWeek(gb_joined_df)
     // saveDataFrameAsCSV(gb_views_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/GB_week_data")
 
     // Reading in United States Data (US):
-    // val us_trends_path = "/s/bach/l/under/driva/csx55/Term-Project/data/US_youtube_trending_data.csv"
-    // val us_category_path = "/s/bach/l/under/driva/csx55/Term-Project/data/US_category_id.csv"
-    // val us_joined_df = readAndJoinTrendsAndCategory(spark, us_trends_path, us_category_path)
-
+    // val us_joined_df = readAndJoinTrendsAndCategory(spark, "US")
     // val us_views_week_df = aggregateViewsPerWeek(us_joined_df)
     // saveDataFrameAsCSV(us_views_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/US_week_data")
+
+    // Reading in Russia Data (RU):
+    // val ru_joined_df = readAndJoinTrendsAndCategory(spark, "RU")
+    // val ru_views_week_df = aggregateViewsPerWeek(ru_joined_df)
+    // saveDataFrameAsCSV(ru_views_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/RU_week_data")
+
+    // Reading in Japan Data (JP):
+    // val jp_joined_df = readAndJoinTrendsAndCategory(spark, "JP")
+    // val jp_views_week_df = aggregateViewsPerWeek(jp_joined_df)
+    // saveDataFrameAsCSV(jp_views_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/JP_week_data")
 
     // Fast run with week data in CSV already:
     val ca_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/CA_week_data/part-00000-11c94ac5-97e6-4dea-b3a8-2d5f2ec1118d-c000.csv")
     val gb_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/GB_week_data/part-00000-f4d2195b-ce14-48b0-8e61-ee2c1a327552-c000.csv")
     val us_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/US_week_data/part-00000-edf17ebf-85d2-4af0-bdab-fc358eacb879-c000.csv")
+    val ru_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/RU_week_data/part-00000-a524d12b-6c2f-47b4-aff5-deb820f24530-c000.csv")
+    val jp_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/JP_week_data/part-00000-49a20846-e447-4128-9456-39d3e55a9ed6-c000.csv")
 
-    // Prefix with something unique prior to joining all three
-    // Create foreign key to match up week-year and categoryTitle
-    val caPrefixed_df = ca_views_week_df
-                        .withColumnRenamed("percent_change", "ca_percent_change")
-                        .withColumn("foreign_key", concat(col("week_year"), lit("-"), col("categoryTitle")))
+    val location_ids = Array("ca", "gb", "us", "ru", "jp")
+    val location_df_array: Array[DataFrame] = Array(ca_views_week_df, gb_views_week_df, us_views_week_df, ru_views_week_df, jp_views_week_df)
 
-    val gbPrefixed_df = gb_views_week_df
-                        .withColumnRenamed("percent_change", "gb_percent_change")
-                        .withColumn("foreign_key", concat(col("week_year"), lit("-"), col("categoryTitle")))
-                        .drop("categoryTitle")
-                        .drop("week_year")
 
-    val usPrefixed_df = us_views_week_df
-                        .withColumnRenamed("percent_change", "us_percent_change")    
-                        .withColumn("foreign_key", concat(col("week_year"), lit("-"), col("categoryTitle")))
-                        .drop("categoryTitle")
-                        .drop("week_year")
-
-    val joined_week_df: DataFrame = caPrefixed_df
-                                    .join(gbPrefixed_df, Seq("foreign_key"))
-                                    .join(usPrefixed_df, Seq("foreign_key"))
-                                    .select("categoryTitle", "week_year", "ca_percent_change", "gb_percent_change", "us_percent_change") // drop unnecessary cols
+    val joined_week_df: DataFrame = joinWeekViewData(location_df_array, location_ids)
+                                    .select("categoryTitle", "week_year", "ca_percent_change", "gb_percent_change", "us_percent_change", "ru_percent_change", "jp_percent_change") // drop unnecessary cols
     joined_week_df.show()
 
     // Extract volatile trends for all three locs
-    sortPercentChangesAndSave(joined_week_df, "ca_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_ca_percent_data")
-    sortPercentChangesAndSave(joined_week_df, "gb_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_gb_percent_data")
-    sortPercentChangesAndSave(joined_week_df, "us_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_us_percent_data")
+    location_ids.foreach(id => sortPercentChangesAndSave(joined_week_df, id + "_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/ordered_" + id +"_percent_data"))
 
     spark.stop()
   }
 
-  def readAndJoinTrendsAndCategory(spark: SparkSession, trends_path: String, category_path: String): DataFrame = {
-    val trends_df: DataFrame = spark.read.option("header", "true").csv("file:///" + trends_path)
-    val category_df: DataFrame = spark.read.option("header", "true").csv("file:///" + category_path)
+  def readAndJoinTrendsAndCategory(spark: SparkSession, country_code: String): DataFrame = {
+    val trends_df: DataFrame = spark.read.option("header", "true").csv("file:///" + "/s/bach/l/under/driva/csx55/Term-Project/data/" + country_code + "_youtube_trending_data.csv")
+    val category_df: DataFrame = spark.read.option("header", "true").csv("file:///" + "/s/bach/l/under/driva/csx55/Term-Project/data/" + country_code + "_category_id.csv")
                                   .withColumnRenamed("title", "categoryTitle")
 
     val joined_df = trends_df
@@ -106,6 +91,27 @@ object TermProjectTest {
                     .orderBy(desc("percent_change"))
 
     percentChange_df
+  }
+
+  def joinWeekViewData(dfs: Array[DataFrame], location_ids: Array[String]): DataFrame = {
+    var ct = 0
+    var joined_df = dfs.head
+                      .withColumnRenamed("percent_change", location_ids(ct) + "_percent_change")
+                      .withColumn("foreign_key", concat(col("week_year"), lit("-"), col("categoryTitle")))
+    ct += 1
+
+    dfs.tail.foreach(df => {
+      val other_df = df
+                      .withColumnRenamed("percent_change", location_ids(ct) + "_percent_change")
+                      .withColumn("foreign_key", concat(col("week_year"), lit("-"), col("categoryTitle")))
+                      .drop("categoryTitle")
+                      .drop("week_year")
+
+      joined_df = joined_df.join(other_df, Seq("foreign_key")) 
+      ct += 1
+    })
+
+    joined_df
   }
 
   def sortPercentChangesAndSave(joined_week_df: DataFrame, percentName: String, savePath: String) : Unit = {
