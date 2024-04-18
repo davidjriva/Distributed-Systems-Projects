@@ -8,19 +8,6 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import time
 
-
-def year_week_to_date(year_week_str):
-    # Parse the year and week from the input string
-    year, week = map(int, year_week_str.split('-'))
-
-    # Find the first day of the week for the given ISO week number
-    first_day = datetime.strptime(f'{year}-W{week}-1', "%Y-W%W-%w")
-
-    # Add 6 days to get the last day of the week
-    last_day = first_day + timedelta(days=6)
-
-    return first_day, last_day
-
 def read_csv_train_and_plot(csv_fp, category_title, verbose=True):
     df = pd.read_csv(csv_fp)
     df['year_month_day'] = df['week_year'].apply(lambda x: datetime.strptime(x + '-1', "%Y-%W-%w"))
@@ -83,30 +70,31 @@ def read_csvs_train_and_plot(regions, csv_fps, category_title, verbose=True):
 
         normalized_forecast = normalize_forecast(forecast)
 
-        forecasts.append((region, forecast))
+        forecasts.append((region, normalized_forecast))
 
-    # Plot forecasts
-    fig = go.Figure()
+    # Create subplots
+    fig = make_subplots(rows=len(regions), cols=1, subplot_titles=regions)
 
-    for region, forecast in forecasts:
-        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name=region))
+    # Add traces to subplots
+    for i, (region, forecast) in enumerate(forecasts, start=1):
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name=region), row=i, col=1)
 
+    # Update layout
     fig.update_layout(title="Forecasts by Region", xaxis_title="Date", yaxis_title="Total Views")
     fig.show()
 
 def main():
     category_title = "Education"
     regions = [
-        "US",
-        "CA",
-        "GB",
-        "JP",
-        "RU"
+        "US","CA","GB",
+        "JP","RU","BR",
+        "DE", "FR", "IN",
+        "KR", "MX"
     ]
 
     # Dynamically generate file paths
     file_paths = []
-    data_directory = "/s/bach/l/under/driva/csx55/Term-Project/data/"
+    data_directory = "/s/bach/l/under/driva/csx55/Term-Project/data/week_data/"
     for region in regions:
         region_directory = os.path.join(data_directory, f"{region}_week_data")
         

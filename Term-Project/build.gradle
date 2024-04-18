@@ -19,7 +19,7 @@ tasks.withType(ScalaCompile) {
     options.incremental = true
 }
 
-mainClassName = 'TermProjectTest'
+mainClassName = 'TermProject'
 
 run {
     args = ['']
