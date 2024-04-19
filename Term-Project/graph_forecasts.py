@@ -10,15 +10,16 @@ def normalize_forecast(forecast):
 
 def main():
     regions = [
-        "US", "CA", "GB",
+        "US", "CA",
         "JP", "RU", "BR",
         "DE", "FR", "IN",
         "KR", "MX"
     ]
+    category_title = "News & Politics"
 
     forecasts = []
     for region in regions:
-        forecast = pd.read_csv(f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_forecasts/{region}_total_views.csv")
+        forecast = pd.read_csv(f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_forecasts_{category_title}/{region}_total_views.csv")
         forecasts.append((region, normalize_forecast(forecast)))
 
     # Create subplots
@@ -27,9 +28,11 @@ def main():
     # Add traces to subplots
     for i, (region, forecast) in enumerate(forecasts, start=1):
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name=region), row=i, col=1)
+        fig.add_vline(x="2024-02-07", line_dash="dash", line_color="black", row=i, col=1)
+        fig.add_annotation(x="2024-02-07", y=1, text="Start of Prophet Forecasts", showarrow=False, row=i, col=1)
 
     # Update layout
-    fig.update_layout(title="Forecasts by Region", xaxis_title="Date", yaxis_title="Total Views")
+    fig.update_layout(title="Forecasts by Region", xaxis_title="Date", yaxis_title="Total Views(Normalized)")
     fig.show()
 
 if __name__ == "__main__":
