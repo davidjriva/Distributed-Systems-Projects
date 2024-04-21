@@ -15,7 +15,7 @@ def main():
         "DE", "FR", "IN",
         "KR", "MX"
     ]
-    category_title = "News & Politics"
+    category_title = "Education"
 
     forecasts = []
     for region in regions:

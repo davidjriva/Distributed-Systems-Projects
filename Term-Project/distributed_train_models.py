@@ -1,8 +1,8 @@
 import pandas as pd
-import numpy as np
 import itertools
 import os
 import csv
+import sys
 from datetime import datetime
 from fbprophet import Prophet
 from fbprophet.diagnostics import cross_validation, performance_metrics
@@ -15,10 +15,18 @@ def read_parameters_from_csv(file_path):
         reader = csv.reader(csvfile)
         next(reader)  # Skip the header row
         for row in reader:
-            params[row[0]] = float(row[1])
+            key = row[0]
+            value = row[1]
+
+            if value.lower() == 'true':
+                params[key] = True
+            elif value.lower() == 'false':
+                params[key] = False
+            else:
+                params[key] = float(value)
     return params
 
-def train_and_forecast(column, prophet_df, category_title):
+def train_and_forecast(column, prophet_df, category_title):    
     # Convert the Spark DataFrame to a Pandas DataFrame
     prophet_pd = prophet_df.toPandas()
     
@@ -30,19 +38,24 @@ def train_and_forecast(column, prophet_df, category_title):
 
     # Tune hyperparameters
     param_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params/{column}_best_params.csv"
+    rmse_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params/{column}_rmse.txt"
     if os.path.exists(param_file_path):
         # Load params to speed up training
         best_params = read_parameters_from_csv(param_file_path)
     else:
         # Generate params from scratch
-        best_params = model_cross_validation(prophet_pd)
+        best_params, best_rmse = model_cross_validation(prophet_pd)
+
+        # Save the RMSE
+        with open(rmse_file_path, "w") as rmse_file:
+            rmse_file.write("Best RMSE: " + str(best_rmse))
 
         # Save best params to CSV
         params_df = pd.DataFrame.from_dict(best_params, orient='index', columns=[column])
-        params_df.to_csv(f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params/{column}_best_params.csv")
+        params_df.to_csv(param_file_path)
 
     # Create and fit model
-    m = Prophet(weekly_seasonality=True, daily_seasonality=True, **best_params)
+    m = Prophet(**best_params)
     m.fit(prophet_pd)
     
     # Make a forecast
@@ -59,7 +72,9 @@ def train_and_forecast(column, prophet_df, category_title):
 def model_cross_validation(prophet_pd):
     param_grid = {
         'changepoint_prior_scale' : [0.001, 0.01, 0.1, 0.5],
-        'seasonality_prior_scale' : [0.01, 0.1, 1.0, 10.0]
+        'seasonality_prior_scale' : [0.01, 0.1, 1.0, 10.0],
+        'daily_seasonality' : [True, False],
+        'weekly_seasonality' : [True, False]
     }
 
     # Generate all combinations of parameters
@@ -77,30 +92,31 @@ def model_cross_validation(prophet_pd):
             best_rmse = rmse
             best_params = params
 
-    return best_params
+    return best_params, best_rmse
 
-
-
-def read_csv_and_forecast(spark, category_title):
+def read_csv_and_forecast(spark, category_title, region):
     joined_df = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/joined_week_data/joined_week_data.csv")
     joined_df = joined_df.filter(col("categoryTitle") == category_title)
     joined_df = joined_df.drop("categoryTitle")
 
-    for column in joined_df.columns[2:]:
-        # Get the column and dates for training
-        prophet_df = joined_df.select("week_year", column).withColumnRenamed(column, "y")
+    column = f"{region}_total_views"
+    prophet_df = joined_df.select("week_year", column).withColumnRenamed(column, "y")
 
-        # Train and forecast for each column in parallel
-        train_and_forecast(column, prophet_df, category_title) 
+    # Train and forecast for each column in parallel
+    train_and_forecast(column, prophet_df, category_title) 
 
 def main():
-    # Instantiate a session
-    spark = SparkSession.builder.appName("Training FB Prophet Distributed").master("local").config("spark.executor.memory", "4g").config("spark.driver.memory", "4g").config("spark.executor.memoryOverhead", "1g").getOrCreate()
+    if (len(sys.argv) < 1):
+        print("Please enter a region as argument to the python program")
+    else:
+        # Instantiate a session
+        spark = SparkSession.builder.appName("Training FB Prophet Distributed").master("local").config("spark.executor.memory", "4g").config("spark.driver.memory", "4g").config("spark.executor.memoryOverhead", "1g").getOrCreate()
 
-    # The locations & category we are modeling
-    category_title = "News & Politics"
+        # The locations & category we are modeling
+        category_title = "Education"
+        region = sys.argv[1]
 
-    read_csv_and_forecast(spark, category_title)
+        read_csv_and_forecast(spark, category_title, region)
 
 if __name__ == "__main__":
     main()
