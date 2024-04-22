@@ -11,7 +11,7 @@ def normalize_forecast(forecast):
 
 def main():
     regions = [
-        "US", "CA",
+        "US", "CA", "GB",
         "JP", "RU", "BR",
         "DE", "FR", "IN",
         "KR", "MX"

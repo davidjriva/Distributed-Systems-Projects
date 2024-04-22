@@ -85,7 +85,7 @@ def main():
         print("Please enter a region as argument to the python program")
     else:
         # The locations & category we are modeling
-        category_title = "News & Politics"
+        category_title = "Film & Animation"
         region = sys.argv[1]
 
         read_csv_and_forecast(category_title, region)

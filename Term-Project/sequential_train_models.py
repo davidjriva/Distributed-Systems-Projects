@@ -83,14 +83,14 @@ def main():
     start_time = time.time()
 
     # The locations & category we are modeling
-    category_title = "Autos & Vehicles"
+    category_title = "Education"
 
     read_csv_and_forecast(category_title)
 
     end_time = time.time()
 
     elapsed_time = end_time - start_time
-    with open("/s/bach/l/under/driva/csx55/Term-Project/data/Distributed_Train_Benchmarks", "a") as f:
+    with open("/s/bach/l/under/driva/csx55/Term-Project/data/Distributed_Train_Benchmarks.txt", "a") as f:
         f.write(f"Sequential Execution Time: {elapsed_time} seconds -- {category_title}")
 
 if __name__ == "__main__":
