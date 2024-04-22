@@ -1,113 +1,97 @@
 import pandas as pd
-from fbprophet import Prophet
-from datetime import datetime, timedelta
+import itertools
 import os
-import matplotlib.pyplot as plt
-from fbprophet.plot import plot_plotly
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
+from datetime import datetime
 import time
+from fbprophet import Prophet
+from fbprophet.diagnostics import cross_validation, performance_metrics
 
-def read_csv_train_and_plot(csv_fp, category_title, verbose=True):
-    df = pd.read_csv(csv_fp)
-    df['year_month_day'] = df['week_year'].apply(lambda x: datetime.strptime(x + '-1', "%Y-%W-%w"))
+def train_and_forecast(column, prophet_df, category_title):        
+    # Fix the dates
+    prophet_df = prophet_df.copy()
+    prophet_df['year_month_day'] = prophet_df['week_year'].apply(lambda x: datetime.strptime(x + '-1', "%Y-%W-%w"))
+    prophet_df['year_month_day'] = prophet_df['year_month_day']
+    prophet_df = prophet_df[['year_month_day', 'y']]
+    prophet_df.rename(columns={'year_month_day' : 'ds'}, inplace=True)
 
-    category_df = df[df["categoryTitle"] == category_title][["year_month_day", "total_views"]].rename(columns={"year_month_day" : "ds", "total_views" : "y"})
+    # Tune hyperparameters
+    param_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params_tmp/{column}_best_params.csv"
+    rmse_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params_tmp/{column}_rmse.txt"
+
+    # Generate params from scratch
+    best_params, best_rmse = model_cross_validation(prophet_df)
+
+    # Save the RMSE
+    with open(rmse_file_path, "w") as rmse_file:
+        rmse_file.write("Best RMSE: " + str(best_rmse))
+
+    # Save best params to CSV
+    params_df = pd.DataFrame.from_dict(best_params, orient='index', columns=[column])
+    params_df.to_csv(param_file_path)
+
+    # Create and fit model
+    m = Prophet(**best_params)
+    m.fit(prophet_df)
     
-    if verbose: print("Training Data:   \n", category_df.head(), "\n")
-
-    # Create model
-    m = Prophet(weekly_seasonality=True, daily_seasonality=True)
-
-    # Train on data
-    if verbose: print("Model Fit Data:  ")
-    m.fit(category_df)
-    if verbose: print("\n")
-
-    # Make predictions
+    # Make a forecast
     future = m.make_future_dataframe(periods=365)
     forecast = m.predict(future)
-    if verbose: print("Future Predictions: ")
-    if verbose: print(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
-
-    # Plot forecast results
-    plot_plotly(m, forecast).show()
-
-def train_and_forecast(fp, category_title, verbose=True):
-    df = pd.read_csv(fp)
-    df['year_month_day'] = df['week_year'].apply(lambda x: datetime.strptime(x + '-1', "%Y-%W-%w"))
-
-    category_df = df[df["categoryTitle"] == category_title][["year_month_day", "total_views"]].rename(columns={"year_month_day" : "ds", "total_views" : "y"})
     
-    if verbose: print("Training Data:   \n", category_df.head(), "\n")
+    # Write the forecast to CSV
+    output_dir = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_forecasts_tmp_{category_title}/"
+    forecast.to_csv(os.path.join(output_dir, column + ".csv"), header=True, index=False)
 
-    # Create model
-    m = Prophet(weekly_seasonality=True, daily_seasonality=True)
+'''
+    Use cross validation to tune our model's hyperparameters
+'''
+def model_cross_validation(prophet_pd):
+    param_grid = {
+        'changepoint_prior_scale' : [0.001, 0.01, 0.1, 0.5],
+        'seasonality_prior_scale' : [0.01, 0.1, 1.0, 10.0],
+        'daily_seasonality' : [True, False],
+        'weekly_seasonality' : [True, False]
+    }
 
-    # Train on data
-    if verbose: print("Model Fit Data:  ")
-    m.fit(category_df)
-    if verbose: print("\n")
+    # Generate all combinations of parameters
+    all_params = [dict(zip(param_grid.keys(), v)) for v in itertools.product(*param_grid.values())]
+    best_rmse = float('inf')
+    best_params = None
 
-    # Make predictions
-    future = m.make_future_dataframe(periods=365)
-    forecast = m.predict(future)
-    if verbose: print("Future Predictions: ")
-    if verbose: print(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
+    for params in all_params:
+        m = Prophet(**params).fit(prophet_pd)
+        df_cv = cross_validation(m, initial='730 days', period='180 days', horizon = '365 days')
+        df_p = performance_metrics(df_cv, rolling_window=1)
+        rmse = df_p['rmse'].values[0]
 
-    return forecast
+        if rmse < best_rmse:
+            best_rmse = rmse
+            best_params = params
 
-def normalize_forecast(forecast):
-    forecast['yhat'] = forecast['yhat'] / forecast['yhat'].max()
-    forecast['yhat_lower'] = forecast['yhat_lower'] / forecast['yhat_lower'].max()
-    forecast['yhat_upper'] = forecast['yhat_upper'] / forecast['yhat_upper'].max()
-    return forecast
+    return best_params, best_rmse
 
-def read_csvs_train_and_plot(regions, csv_fps, category_title, verbose=True):
-    forecasts = []
-    for fp, region in zip(csv_fps, regions):
-        forecast = train_and_forecast(fp, category_title, verbose)
+def read_csv_and_forecast(category_title):
+    joined_df = pd.read_csv("/s/bach/l/under/driva/csx55/Term-Project/data/joined_week_data/joined_week_data.csv")
+    joined_df = joined_df[joined_df["categoryTitle"] == category_title]
+    joined_df = joined_df.drop(columns=["categoryTitle"])
 
-        normalized_forecast = normalize_forecast(forecast)
-
-        forecasts.append((region, normalized_forecast))
-
-    # Create subplots
-    fig = make_subplots(rows=len(regions), cols=1, subplot_titles=regions)
-
-    # Add traces to subplots
-    for i, (region, forecast) in enumerate(forecasts, start=1):
-        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name=region), row=i, col=1)
-
-    # Update layout
-    fig.update_layout(title="Forecasts by Region", xaxis_title="Date", yaxis_title="Total Views")
-    fig.show()
+    for column in joined_df.columns[2:]:
+        prophet_df = joined_df[["week_year", column]].rename(columns={column: "y"})
+        # Train and forecast for each column in parallel
+        train_and_forecast(column, prophet_df, category_title) 
 
 def main():
-    category_title = "Education"
-    regions = [
-        "US","CA","GB",
-        "JP","RU","BR",
-        "DE", "FR", "IN",
-        "KR", "MX"
-    ]
+    start_time = time.time()
 
-    # Dynamically generate file paths
-    file_paths = []
-    data_directory = "/s/bach/l/under/driva/csx55/Term-Project/data/week_data/"
-    for region in regions:
-        region_directory = os.path.join(data_directory, f"{region}_week_data")
-        
-        files = os.listdir(region_directory)
-        
-        csv_files = [file for file in files if file.endswith(".csv")]
-        
-        if csv_files:
-            csv_file_path = os.path.join(region_directory, csv_files[0])
-            file_paths.append(csv_file_path)
+    # The locations & category we are modeling
+    category_title = "Autos & Vehicles"
 
-    read_csvs_train_and_plot(regions, file_paths, category_title, False)
+    read_csv_and_forecast(category_title)
 
+    end_time = time.time()
+
+    elapsed_time = end_time - start_time
+    with open("/s/bach/l/under/driva/csx55/Term-Project/data/Distributed_Train_Benchmarks", "a") as f:
+        f.write(f"Sequential Execution Time: {elapsed_time} seconds -- {category_title}")
 
 if __name__ == "__main__":
     main()

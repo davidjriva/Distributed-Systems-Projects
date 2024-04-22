@@ -1,4 +1,5 @@
 import pandas as pd
+import sys
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
@@ -15,7 +16,12 @@ def main():
         "DE", "FR", "IN",
         "KR", "MX"
     ]
-    category_title = "Education"
+
+    if (len(sys.argv) < 1):
+        print("Please enter a region as argument to the python program")
+        quit()
+    else:
+        category_title = sys.argv[1]
 
     forecasts = []
     for region in regions:
