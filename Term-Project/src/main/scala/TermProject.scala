@@ -14,43 +14,42 @@ object TermProject {
     val regions: Array[String] = Array("CA", "GB", "US", "RU", "JP", "BR", "DE", "FR", "IN", "KR", "MX")
 
     // Pt.1: Read in and save dataframes with view count per week:
-
     // Define the directory containing the CSV files
-    // regions.foreach(region => {
-    //   val joined_df = readAndJoinTrendsAndCategory(spark, region)
-    //   val views_weeks_df = aggregateViewsPerWeek(joined_df)
-    //   saveDataFrameAsCSV(views_weeks_df, f"/s/bach/l/under/driva/csx55/Term-Project/data/week_data/" + region + "_week_data.csv")
-    // })
+    regions.foreach(region => {
+      val joined_df = readAndJoinTrendsAndCategory(spark, region)
+      val views_weeks_df = aggregateViewsPerWeek(joined_df)
+      saveDataFrameAsCSV(views_weeks_df, f"/s/bach/l/under/driva/csx55/Term-Project/data/week_data/" + region + "_week_data.csv")
+    })
 
     // Read in view per week data from CSV files:
-    // val ca_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/CA_week_data/part-00000-ab3d8d64-1316-422a-adcf-48ec4b8b3c09-c000.csv")
-    // val gb_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/GB_week_data/part-00000-77614d1b-1454-47e8-90a6-6c3e128a9282-c000.csv")
-    // val us_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/US_week_data/part-00000-3a519b4e-0294-44e1-b824-08c9ec0d6eee-c000.csv")
-    // val ru_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/RU_week_data/part-00000-1315a3b5-4b67-48f9-8bc4-55c5eb908928-c000.csv")
-    // val jp_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/JP_week_data/part-00000-8b73b52d-b733-4842-8947-b1bd271d60f1-c000.csv")
-    // val br_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/BR_week_data/part-00000-9fccd3d4-5bbe-4143-92bc-2b09b697daf7-c000.csv")
-    // val de_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/DE_week_data/part-00000-a6f906aa-1785-4f23-88ef-053b6873ef6e-c000.csv")
-    // val fr_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/FR_week_data/part-00000-4c1df873-6649-4951-a592-594d347d4657-c000.csv")
-    // val in_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/IN_week_data/part-00000-6c364cc4-6e6e-4c2f-b228-a2ba34feee2b-c000.csv")
-    // val kr_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/KR_week_data/part-00000-bd89ed73-8804-4011-99ba-8e22bdc59a19-c000.csv")
-    // val mx_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/MX_week_data/part-00000-e7adbc99-342b-404e-9b0d-e6e99931f928-c000.csv")
+    val ca_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/CA_week_data/part-00000-ab3d8d64-1316-422a-adcf-48ec4b8b3c09-c000.csv")
+    val gb_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/GB_week_data/part-00000-77614d1b-1454-47e8-90a6-6c3e128a9282-c000.csv")
+    val us_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/US_week_data/part-00000-3a519b4e-0294-44e1-b824-08c9ec0d6eee-c000.csv")
+    val ru_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/RU_week_data/part-00000-1315a3b5-4b67-48f9-8bc4-55c5eb908928-c000.csv")
+    val jp_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/JP_week_data/part-00000-8b73b52d-b733-4842-8947-b1bd271d60f1-c000.csv")
+    val br_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/BR_week_data/part-00000-9fccd3d4-5bbe-4143-92bc-2b09b697daf7-c000.csv")
+    val de_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/DE_week_data/part-00000-a6f906aa-1785-4f23-88ef-053b6873ef6e-c000.csv")
+    val fr_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/FR_week_data/part-00000-4c1df873-6649-4951-a592-594d347d4657-c000.csv")
+    val in_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/IN_week_data/part-00000-6c364cc4-6e6e-4c2f-b228-a2ba34feee2b-c000.csv")
+    val kr_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/KR_week_data/part-00000-bd89ed73-8804-4011-99ba-8e22bdc59a19-c000.csv")
+    val mx_views_week_df: DataFrame = spark.read.option("header", "true").csv("file:////s/bach/l/under/driva/csx55/Term-Project/data/week_data/MX_week_data/part-00000-e7adbc99-342b-404e-9b0d-e6e99931f928-c000.csv")
 
-    // val location_df_array: Array[DataFrame] = Array(ca_views_week_df, gb_views_week_df, us_views_week_df, 
-                                                    // ru_views_week_df, jp_views_week_df, br_views_week_df,
-                                                    // de_views_week_df, fr_views_week_df, in_views_week_df, 
-                                                    // kr_views_week_df, mx_views_week_df)
+    val location_df_array: Array[DataFrame] = Array(ca_views_week_df, gb_views_week_df, us_views_week_df, 
+                                                    ru_views_week_df, jp_views_week_df, br_views_week_df,
+                                                    de_views_week_df, fr_views_week_df, in_views_week_df, 
+                                                    kr_views_week_df, mx_views_week_df)
 
-    // val cols_to_select: ArrayBuffer[String] = ArrayBuffer("categoryTitle", "week_year")
-    // regions.foreach(region => cols_to_select.append(region + "_percent_change"))
+    val cols_to_select: ArrayBuffer[String] = ArrayBuffer("categoryTitle", "week_year")
+    regions.foreach(region => cols_to_select.append(region + "_percent_change"))
     
-    // val selected_cols = cols_to_select.map(col)
-    // val joined_week_df: DataFrame = joinWeekViewData(location_df_array, regions)
-                                    // .select(selected_cols: _*)
-    // saveDataFrameAsCSV(joined_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/percent_joined/")
-    // joined_week_df.show()
+    val selected_cols = cols_to_select.map(col)
+    val joined_week_df: DataFrame = joinWeekViewData(location_df_array, regions)
+                                    .select(selected_cols: _*)
+    saveDataFrameAsCSV(joined_week_df, "/s/bach/l/under/driva/csx55/Term-Project/data/percent_joined/")
+    joined_week_df.show()
 
     // Extract volatile trends for all three locs
-    // regions.foreach(id => sortPercentChangesAndSave(joined_week_df, id + "_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/percent_ordered_data/" + id + "_percent_data_ordered"))
+    regions.foreach(id => sortPercentChangesAndSave(joined_week_df, id + "_percent_change", "/s/bach/l/under/driva/csx55/Term-Project/data/percent_ordered_data/" + id + "_percent_data_ordered"))
 
     spark.stop()
   }
