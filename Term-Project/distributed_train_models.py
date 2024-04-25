@@ -16,14 +16,13 @@ def train_and_forecast(column, prophet_df, category_title):
 
     # Tune hyperparameters
     param_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params/{column}_best_params.csv"
-    rmse_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params/{column}_rmse.txt"
+    performance_file_path = f"/s/bach/l/under/driva/csx55/Term-Project/data/prophet_params/{column}_model_performance.csv"
 
     # Generate params from scratch
-    best_params, best_rmse = model_cross_validation(prophet_df)
+    best_params, df_p = model_cross_validation(prophet_df)
 
     # Save the RMSE
-    with open(rmse_file_path, "w") as rmse_file:
-        rmse_file.write("Best RMSE: " + str(best_rmse))
+    df_p.to_csv(performance_file_path)
 
     # Save best params to CSV
     params_df = pd.DataFrame.from_dict(best_params, orient='index', columns=[column])
@@ -54,7 +53,7 @@ def model_cross_validation(prophet_pd):
 
     # Generate all combinations of parameters
     all_params = [dict(zip(param_grid.keys(), v)) for v in itertools.product(*param_grid.values())]
-    best_rmse = float('inf')
+    best_performance = pd.DataFrame()
     best_params = None
 
     for params in all_params:
@@ -63,11 +62,11 @@ def model_cross_validation(prophet_pd):
         df_p = performance_metrics(df_cv, rolling_window=1)
         rmse = df_p['rmse'].values[0]
 
-        if rmse < best_rmse:
-            best_rmse = rmse
+        if best_performance.empty or rmse < best_performance['rmse'].values[0]:
+            best_performance = df_p
             best_params = params
 
-    return best_params, best_rmse
+    return best_params, df_p
 
 def read_csv_and_forecast(category_title, region):
     joined_df = pd.read_csv("/s/bach/l/under/driva/csx55/Term-Project/data/joined_week_data/joined_week_data.csv")
@@ -76,6 +75,8 @@ def read_csv_and_forecast(category_title, region):
 
     column = f"{region}_total_views"
     prophet_df = joined_df[["week_year", column]].rename(columns={column: "y"})
+
+    
 
     # Train and forecast for each column in parallel
     train_and_forecast(column, prophet_df, category_title) 
