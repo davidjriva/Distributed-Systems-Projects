@@ -16,7 +16,7 @@ for i in "${!MACHINES[@]}"; do
     # The -t is how it prints in the terminal being run from, instead of just on the remote machine
     # 2>/dev/null moves error output, so you don't see "Connection closed"
     # Note the quotes around the command, so that it is treated as one item and not expanded before being sent
-    ssh -t "$machine" "python3 /s/bach/l/under/driva/csx55/Term-Project/distributed_train_models.py $region" 2>/dev/null &
+    ssh -t "$machine" "python3 /s/bach/l/under/driva/csx55/Term-Project/distributed_random_forest_model.py $region" 2>/dev/null &
 done
 
 
